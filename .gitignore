@@ -162,3 +162,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 **/out/
+
+# macOS
+.DS_Store
