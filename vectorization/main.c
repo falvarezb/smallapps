@@ -20,8 +20,16 @@
 #include <inttypes.h>
 
 #define BASE_SIZE 32 // size in bytes of 8 integers
-#define BUF_SIZE (BASE_SIZE*1024L*1024L) // multiple of BASE_SIZE
-#define FILE_SIZE (BUF_SIZE*512L) // multiple of BUF_SIZE
+#define BUF_SIZE (BASE_SIZE*1) // multiple of BASE_SIZE
+#define FILE_SIZE (BUF_SIZE*1) // multiple of BUF_SIZE
+
+
+void print_array(int32_t* arr, size_t size) {
+    for (int i = 0; i < size; i++){
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
 
 /**
  * @brief Add elements of the arrays 'a' and 'b' by using AVX2 instructions and stores the result in array 'c'
@@ -63,7 +71,8 @@ void add_arrays_avx512(int32_t *a, int32_t *b, int32_t *c, size_t size){
 /**
  * @brief Add elements of the arrays 'a' and 'b' in a scalar fashion and stores the result in array 'c' 
  */
-void add_arrays_scalar(int32_t *a, int32_t *b, int32_t *c, size_t size){    
+void add_arrays_scalar(int32_t *a, int32_t *b, int32_t *c, size_t size){   
+    print_array(a, size); 
     for (size_t i = 0; i < size; i++){ 
         c[i] = a[i] + b[i];
     }
@@ -105,7 +114,7 @@ int32_t* allocate_memory(size_t num_integers) {
     return buf;
 }
 
-void run(char* file_name1, char* file_name2, char* run_mode) {
+int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
     
     size_t num_integers = FILE_SIZE/sizeof(int32_t);
     int32_t* buf1 = allocate_memory(BUF_SIZE);
@@ -134,11 +143,11 @@ void run(char* file_name1, char* file_name2, char* run_mode) {
         result_position += min_num_read;
     }
 
-    // for (int i = 0; i < num_integers; i++){
-    //     printf("%d ", result[i]);
-    // }
-    // printf("\n");
+    print_array(result, num_integers);
+    return result;
 }
+
+#ifndef TEST
 
 /**
  * Before running, compile with the correct values of BUF_SIZE and FILE_SIZE
@@ -158,3 +167,5 @@ int main(int n, char **args) {
     }    
     run(file_name1, file_name2, run_mode);   
 }
+
+#endif
