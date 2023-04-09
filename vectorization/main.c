@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define BASE_SIZE 32 // size in bytes of 8 integers
+#define BASE_SIZE 8 // 8 integers
 #define BUF_SIZE (BASE_SIZE) // multiple of BASE_SIZE
 
 
