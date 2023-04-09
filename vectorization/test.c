@@ -1,12 +1,12 @@
 
-#include <inttypes.h>
+#include <stdint.h>
 #include <assert.h>
 #include <stdio.h>
 
 extern int32_t* run(char*, char*, char*);
 
 void assert_array(int32_t* actual, int32_t* expected, size_t size) {
-    for (int i = 0; i < size; i++){
+    for (int i = 0; i < size; i++){        
         assert(actual[i] ==  expected[i]);
     }    
 }
@@ -21,6 +21,18 @@ void testfile32() {
     assert_array(result, expected_result, size);
 }
 
+void testfile64() {
+    char* file_name1 = "testfiles/filetest64";
+    char* file_name2 = "testfiles/filetest64copy";
+    char* run_mode = "";
+    int32_t* result = run(file_name1, file_name2, run_mode);
+    int32_t expected_result[] = {1653239700, -1319713446, 2091309360, -1080189766, 603232712, 455946188, 1763699284, -1046572764,
+    -1428600120, -1601384636, 1618116198, 773187136, 176541914, -311566690, 793470738, 1180972056};
+    size_t size = 16;
+    assert_array(result, expected_result, size);
+}
+
 int main(int n, char **args) {
-    testfile32();
+    // testfile32();
+    testfile64();
 }

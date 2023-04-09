@@ -17,11 +17,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <inttypes.h>
+#include <stdint.h>
+#include <assert.h>
 
 #define BASE_SIZE 32 // size in bytes of 8 integers
-#define BUF_SIZE (BASE_SIZE*1) // multiple of BASE_SIZE
-#define FILE_SIZE (BUF_SIZE*1) // multiple of BUF_SIZE
+#define BUF_SIZE (BASE_SIZE) // multiple of BASE_SIZE
 
 
 void print_array(int32_t* arr, size_t size) {
@@ -29,6 +29,21 @@ void print_array(int32_t* arr, size_t size) {
         printf("%d ", arr[i]);
     }
     printf("\n");
+}
+
+long get_file_size(FILE* file, char* file_name) {
+    if(fseek(file, 0, SEEK_END) == 0) {
+        long file_size;
+        if((file_size = ftell(file)) > -1) {
+            rewind(file);
+            return file_size;
+        }
+        printf("error %d while sizing file %s", errno, file_name);        
+        exit(EXIT_FAILURE);
+    }
+    printf("error while sizing file %s", file_name);        
+    exit(EXIT_FAILURE);
+
 }
 
 /**
@@ -114,16 +129,21 @@ int32_t* allocate_memory(size_t num_integers) {
     return buf;
 }
 
-int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
-    
-    size_t num_integers = FILE_SIZE/sizeof(int32_t);
+int32_t* run(char* file_name1, char* file_name2, char* run_mode) {            
+    FILE* file1 = open_file(file_name1);
+    FILE* file2 = open_file(file_name2);
+    long file_size1 = get_file_size(file1, file_name1);
+    long file_size2 = get_file_size(file2, file_name2);
+    assert(file_size1 == file_size2);
+
+    //file size must be a multiple of 4 so that its content can be interpreted as 4-byte integers
+    assert(file_size1 % sizeof(int32_t) == 0);
+
+    size_t num_integers = file_size1/sizeof(int32_t);
     int32_t* buf1 = allocate_memory(BUF_SIZE);
     int32_t* buf2 = allocate_memory(BUF_SIZE);
     int32_t* result = allocate_memory(num_integers);    
     size_t result_position = 0;
-
-    FILE* file1 = open_file(file_name1);
-    FILE* file2 = open_file(file_name2);
 
     size_t num_read1, num_read2;
     while ((num_read1 = read_next(file1, file_name1, buf1, BUF_SIZE)) > 0 && 
@@ -149,12 +169,9 @@ int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
 
 #ifndef TEST
 
-/**
- * Before running, compile with the correct values of BUF_SIZE and FILE_SIZE
- */
 int main(int n, char **args) {
     if (n < 3) {
-        printf("USAGE: main file1 file2 [AVX2|AVX512]; if 3rd argument is not provided, the scalar version is run");
+        printf("USAGE: main file1 file2 [AVX2|AVX512]; if vectorization argument is not provided, the scalar version is run");
         exit(EXIT_FAILURE);
     }
 
