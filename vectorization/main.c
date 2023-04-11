@@ -1,17 +1,6 @@
 /**
- * Module with examples on how to use vector operations. Vector operations can be applied to all elements of a vector at once, in
- * a single clock cycle.
- * 
- * In 2008, Intel introduced a new set of high-performance instructions called Advanced Vector Extensions (AVX) 
- * to perform SIMD (single instruction, multiple data) processing.
- * 
- * Access to AVX instructions is done through special C functions called intrinsic functions. 
- * An intrinsic function doesn't necessarily map to a single instruction though
- * 
- * See https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
- * 
+ * Module with examples on how to use vector operations
  */
-
 
 #include <immintrin.h> // Include header for AVX instructions
 #include <stdio.h>
@@ -19,9 +8,10 @@
 #include <errno.h>
 #include <stdint.h>
 #include <assert.h>
+#include <time.h>
 
 #define BASE_SIZE 8 // 8 integers
-#define BUF_SIZE (BASE_SIZE) // multiple of BASE_SIZE
+#define BUF_SIZE (BASE_SIZE*1024*1024) // multiple of BASE_SIZE
 
 
 void print_array(int32_t* arr, size_t size) {
@@ -63,31 +53,10 @@ void add_arrays_avx2(int32_t *a, int32_t *b, int32_t *c, size_t size){
 }
 
 /**
- * @brief Similar to 'add_arrays_avx2' but using AVX512
- * 
- * Although this function can be compiled by using the compiler's flag '-mavx512', the corresponding processor instructions are
- * not supported by my Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz and trying to run it results in the error
- * "illegal hardware instruction" 
- * 
- * Only AVX2 is supported:
- * >> sysctl -a | grep machdep.cpu.leaf7_features
- * machdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 AVX2 SMEP BMI2 ERMS INVPCID FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT SGXLC MDCLEAR IBRS STIBP L1DF ACAPMSR SSBD
- * 
- */
-void add_arrays_avx512(int32_t *a, int32_t *b, int32_t *c, size_t size){    
-    for (size_t i = 0; i < size; i += 16){   // Process 16 integers at a time (assuming 512-bit AVX)
-        __m512i a_vec = _mm512_loadu_si512((__m512i *)(a + i)); // Load 16 elements from a
-        __m512i b_vec = _mm512_loadu_si512((__m512i *)(b + i)); // Load 16 elements from b
-        __m512i c_vec = _mm512_add_epi32(a_vec, b_vec);         // Add the two vectors element-wise
-        _mm512_storeu_si512((__m512i *)(c + i), c_vec);         // Store the result back to memory
-    }
-}
-
-/**
  * @brief Add elements of the arrays 'a' and 'b' in a scalar fashion and stores the result in array 'c' 
  */
 void add_arrays_scalar(int32_t *a, int32_t *b, int32_t *c, size_t size){   
-    print_array(a, size); 
+    // print_array(a, size); 
     for (size_t i = 0; i < size; i++){ 
         c[i] = a[i] + b[i];
     }
@@ -145,6 +114,11 @@ int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
     int32_t* result = allocate_memory(num_integers);    
     size_t result_position = 0;
 
+    clock_t start_time, end_time;
+    double elapsed_time;
+
+    //TIMED CODE
+    start_time = clock();
     size_t num_read1, num_read2;
     while ((num_read1 = read_next(file1, file_name1, buf1, BUF_SIZE)) > 0 && 
         (num_read2 = read_next(file2, file_name2, buf2, BUF_SIZE)) > 0) {
@@ -153,17 +127,18 @@ int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
         if (run_mode != NULL && strcmp(run_mode, "AVX2") == 0){            
             add_arrays_avx2(buf1, buf2, result + result_position, min_num_read);
         }
-        else if (run_mode != NULL && strcmp(run_mode, "AVX512") == 0){            
-            add_arrays_avx512(buf1, buf2, result + result_position, min_num_read);
-        }
         else{            
             add_arrays_scalar(buf1, buf2, result + result_position, min_num_read);
         }
         
         result_position += min_num_read;
     }
+    //END TIMED CODE
+    end_time = clock();
+    elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n", elapsed_time);
 
-    print_array(result, num_integers);
+    // print_array(result, num_integers);
     return result;
 }
 
@@ -171,7 +146,7 @@ int32_t* run(char* file_name1, char* file_name2, char* run_mode) {
 
 int main(int n, char **args) {
     if (n < 3) {
-        printf("USAGE: main file1 file2 [AVX2|AVX512]; if vectorization argument is not provided, the scalar version is run");
+        printf("USAGE: main file1 file2 [AVX2]; if vectorization argument is not provided, the scalar version is run");
         exit(EXIT_FAILURE);
     }
 
