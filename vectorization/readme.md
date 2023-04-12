@@ -26,12 +26,11 @@ gcc -mavx2 main.c
 ## Benchmark
 
 file size = 16Gb (2^34), equivalent to an array with 2^32 (2^34/4) integers
+
 buffer size = 8Mb (2^23)
 
 Result after 5 runs of the scalar and AVX2 versions:
 
-* __scalar version__ = [25.447367, 24.903282, 25.970131, 25.799534, 25.862530]
-25.596569 ± 0.434277
+* __scalar version__ = [25.447367, 24.903282, 25.970131, 25.799534, 25.862530] --> 25.596569 ± 0.434277
 
-* __AVX2 version__ = [21.470280, 22.316618, 21.550274, 23.462484, 21.382882]
-22.0365076 ± 0.879792
+* __AVX2 version__ = [21.470280, 22.316618, 21.550274, 23.462484, 21.382882] --> 22.0365076 ± 0.879792
