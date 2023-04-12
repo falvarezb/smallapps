@@ -10,7 +10,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/a.out",
-            "args": ["testfiles/filetest36","testfiles/filetest36copy", "XX"],
+            "args": ["../file1","../file2", "AVX2"],
             "stopAtEntry": false,            
             "environment": [],
             "externalConsole": false,
