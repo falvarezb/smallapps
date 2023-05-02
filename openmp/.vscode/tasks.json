@@ -3,17 +3,23 @@
         {
             "type": "cppbuild",
             "label": "C/C++: gcc build active file",
-            "command": "/usr/bin/gcc",
+            "command": "/usr/local/opt/llvm/bin/clang",
             "args": [  
                 "-fopenmp",              
                 "-fdiagnostics-color=always",
+                "-Wall",    
+                "-Wno-missing-braces ",
+                "-Wextra",
+                "-Wshadow",
+                "-Wpedantic",
+                "-std=c17",
                 // "-I/usr/local/opt/libomp/include",
                 // "-L/usr/local/opt/libomp/lib",
                 // "-lomp",
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${fileDirname}/out/${fileBasenameNoExtension}"
             ],
             "options": {
                 "cwd": "${fileDirname}"

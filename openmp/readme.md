@@ -19,9 +19,9 @@ Plus OpenMP library:
 brew install libomp
 ```
 
-Then, to build a simple `hello world`, you'd write:
+Then, to build a __'hello world'__:
 
-```
+```sh
 /usr/local/opt/llvm/bin/clang -fopenmp helloworld.c
 ```
 
@@ -43,8 +43,7 @@ OpenMP assumes a Shared Memory Computer:
 - Non Uniform Address Space Multiprocessor (NUMA)
 
 The shared address space and programming models encourage us to think of them as SMP systems.
-Any multiprocessor CPU with a cache is a NUMA system. Start out by treating the system as an SMP and
-just accept that much of your optimization work will address cases where that case breaks down.
+Any multiprocessor CPU with a cache is a NUMA system. Start out by treating the system as an SMP and just accept that much of your optimization work will address cases where that case breaks down.
 
 
 ## Examples
