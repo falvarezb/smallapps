@@ -10,20 +10,20 @@
 
 void thread_body(double *sum, double step) {
     int num_threads = omp_get_num_threads();
-    int ID = omp_get_thread_num();
-    // printf(" thread(%d)\n", ID);
-    size_t init_num_steps = NUM_STEPS / num_threads * ID;
-    size_t end_num_steps = NUM_STEPS / num_threads * (ID + 1);
+    int id = omp_get_thread_num();
+    // printf(" thread(%d)\n", id);
+    size_t init_num_steps = NUM_STEPS / num_threads * id;
+    size_t end_num_steps = NUM_STEPS / num_threads * (id + 1);
     // in case NUM_THREADS does not divide NUM_STEPS, last thread takes the extra work
-    if(ID == NUM_THREADS - 1 && end_num_steps < NUM_STEPS) {
+    if(id == NUM_THREADS - 1 && end_num_steps < NUM_STEPS) {
         end_num_steps = NUM_STEPS;
     }
 
-    // printf(" thread(%d) - init_NUM_STEPS(%ld)\n", ID, init_num_steps);
-    // printf(" thread(%d) - end_NUM_STEPS(%ld)\n", ID, end_num_steps);
+    // printf(" thread(%d) - init_NUM_STEPS(%ld)\n", id, init_num_steps);
+    // printf(" thread(%d) - end_NUM_STEPS(%ld)\n", id, end_num_steps);
     for(size_t i = init_num_steps; i < end_num_steps; i++) {
         double x = (i + 0.5) * step;
-        sum[ID] += 4.0 / (1.0 + x * x);
+        sum[id] += 4.0 / (1.0 + x * x);
     }
 }
 
