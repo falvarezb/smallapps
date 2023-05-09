@@ -6,7 +6,7 @@
 #include "omp.h"
 
 #define NUM_STEPS 5000000000L
-#define NUM_THREADS 256
+#define NUM_THREADS 1000
 
 void thread_body(double *sum, double step, int *actual_num_threads) {
     int num_threads = omp_get_num_threads();

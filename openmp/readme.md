@@ -54,5 +54,9 @@ Program to estimate the value of π by implementing an algorithm to approximate 
 
 $$\int_{0}^{1}\frac{4.0}{1+x^2}dx$$
 
+Here's different versions of the program:
 
-`serial_pi.c` is the one-thread version and `par_pi.c` the parallel version with multiple threads.
+`serial_pi.c` --> one-thread version a
+`false_sharing_par_pi.c` --> parallel version with [false sharing](http://www.nic.uoregon.edu/~khuck/ts/acumem-report/manual_html/ch06s07.html#:~:text=In%20OpenMP%20programs%20False%20sharing,thread%20local%20variables%20often%20helps.&text=Avoid%20writing%20to%20global%20data%20that%20is%20accessed%20from%20multiple%20threads.&text=Align%20shared%20global%20data%20to%20cache%20line%20boundaries.)
+`padded_par` --> parallel version with shared data aligned to cache line boundaries to avoid false sharing. See more details about [padding](http://www.catb.org/esr/structure-packing/)
+

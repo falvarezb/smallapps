@@ -6,15 +6,16 @@
 #include "omp.h"
 
 #define NUM_STEPS 5000000000L
-#define NUM_THREADS 256
+#define NUM_THREADS 1000
+#define PAD 8 // 8 doubles  = 64 bytes (assuming 64-byte L1 cache line size)
 
-void thread_body(double *sum, double step, int *actual_num_threads) {
+void thread_body(double sum[][PAD], double step, int *actual_num_threads) {
     int num_threads = omp_get_num_threads();
     int id = omp_get_thread_num();
 
     //we choose a random thread to update actual_num_threads
     if(id == 0) {
-        *actual_num_threads = num_threads;        
+        *actual_num_threads = num_threads;
     }
 
     // printf(" thread(%d)\n", id);
@@ -22,7 +23,7 @@ void thread_body(double *sum, double step, int *actual_num_threads) {
     //round robin distribution of the thread's job
     for(size_t i = id; i < NUM_STEPS; i += num_threads) {
         double x = (i + 0.5) * step;
-        sum[id] += 4.0 / (1.0 + x * x);
+        sum[id][0] += 4.0 / (double)(1.0 + x * x);
     }
 }
 
@@ -32,9 +33,10 @@ int main(int argc, char const *argv[]) {
     //CAUTION: the environment can choose to create fewer threads than requested
     omp_set_num_threads(NUM_THREADS);
     int actual_num_threads;
-    double sum[NUM_THREADS] = { 0 };
+    double sum[NUM_THREADS][PAD] = { {0} };
     printf("NUM_STEPS=%ld\n", NUM_STEPS);
     printf("NUM_THREADS=%d\n", NUM_THREADS);
+    printf("PAD=%d\n", PAD);
     double start_time = omp_get_wtime();
 
 #pragma omp parallel
@@ -44,7 +46,7 @@ int main(int argc, char const *argv[]) {
 
     double total_sum = 0;
     for(int i = 0; i < actual_num_threads; i++) {
-        total_sum += sum[i];
+        total_sum += sum[i][0];
     }
 
     double pi = step * total_sum;
