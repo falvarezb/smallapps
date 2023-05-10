@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
     printf("NUM_THREADS=%d\n", NUM_THREADS);
     double start_time = omp_get_wtime();
 
-#pragma omp parallel
+#pragma omp parallel //fork-join construct
     {
         thread_body(sum, step, &actual_num_threads);
     }
