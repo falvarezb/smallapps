@@ -33,6 +33,8 @@ int main(int argc, char const *argv[]) {
     //CAUTION: the environment can choose to create fewer threads than requested
     omp_set_num_threads(NUM_THREADS);
     int actual_num_threads;
+
+    // Padded arrays so elements are on distinct cache lines
     double sum[NUM_THREADS][PAD] = { {0} };
     printf("NUM_STEPS=%ld\n", NUM_STEPS);
     printf("NUM_THREADS=%d\n", NUM_THREADS);
