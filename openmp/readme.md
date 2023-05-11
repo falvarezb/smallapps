@@ -5,7 +5,7 @@ OpenMP resources:
 - https://www.openmp.org/resources/tutorials-articles/
 
 
-## Introduction
+## Environment configuration (MacOSX)
 
 Apple ships its own version of [LLVM](https://llvm.org/) with Xcode and does not support OpenMP. Therefore, it is necessary to install LLVM separately:
 
@@ -21,7 +21,7 @@ brew install libomp
 
 Then, to build a __'hello world'__:
 
-```sh
+```
 /usr/local/opt/llvm/bin/clang -fopenmp helloworld.c
 ```
 
@@ -70,7 +70,7 @@ SPMD algorithm executes a single program on multiple processors, with each proce
 
 Worksharing is a technique for dividing a task into smaller sub-tasks and distributing those sub-tasks among multiple processors.
 
-Here's a comparison of the different versions for a given number of steps of 5,000,000,00
+Here's a comparison of the different versions for a given number of steps of 5,000,000,000
 
 ```
 /usr/local/opt/llvm/bin/clang serial_pi.c -o out/serial_pi
@@ -138,5 +138,6 @@ __Notes__:
 __Analysis__:
 
 - the effect of false sharing is inversely proportional to the number of threads; that makes sense as the array _double sum[num_threads]_ will span more and more cache lines and therefore the probability of 2 threads accessing the same cache line will be lower
-- the performance of the _padded_ and _synced_ versions is similar but the _synced_ version is more portable across different hardware architectures
+- the performance of the _padded_ and _synced_ versions is similar but the _synced_ version is portable across different hardware architectures
 - the _for-reduction_ version uses the default scheduler and default number of threads that, in my machine, is 16 (one per core)
+- the _for-reduction_ version can be compiled without OpenMP flag and become _serial_pi_ again.
