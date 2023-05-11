@@ -5,7 +5,7 @@
             "label": "C/C++: gcc build active file",
             "command": "/usr/local/opt/llvm/bin/clang",
             "args": [  
-                "-fopenmp",              
+                "-fopenmp",                          
                 "-fdiagnostics-color=always",
                 "-Wall",    
                 "-Wno-missing-braces ",

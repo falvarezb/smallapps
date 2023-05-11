@@ -3,11 +3,12 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "omp.h"
 
 #define NUM_STEPS 5000000000L
-#define NUM_THREADS 1000
-#define PAD 8 // 8 doubles  = 64 bytes (assuming 64-byte L1 cache line size)
+#define NUM_THREADS 16 //default value (number of virtual cores on my machine)
 static double pi = 0;
 
 void thread_body(double step, int *actual_num_threads) {
@@ -17,9 +18,7 @@ void thread_body(double step, int *actual_num_threads) {
     //we choose a random thread to update actual_num_threads
     if(id == 0) {
         *actual_num_threads = num_threads;
-    }
-
-    // printf(" thread(%d)\n", id);
+    }    
 
     //round robin distribution of the thread's job
     double sum = 0;
@@ -32,15 +31,19 @@ void thread_body(double step, int *actual_num_threads) {
 }
 
 int main(int argc, char const *argv[]) {
+    int requested_num_threads = NUM_THREADS;
+    if(argc > 1) {
+        requested_num_threads = atoi(argv[1]);
+    }
+
     double step = 1.0 / NUM_STEPS;
 
     //CAUTION: the environment can choose to create fewer threads than requested
-    omp_set_num_threads(NUM_THREADS);
+    omp_set_num_threads(requested_num_threads);
     int actual_num_threads;
 
     printf("NUM_STEPS=%ld\n", NUM_STEPS);
-    printf("NUM_THREADS=%d\n", NUM_THREADS);
-    printf("PAD=%d\n", PAD);
+    printf("requested_num_threads=%d\n", requested_num_threads);    
     double start_time = omp_get_wtime();
 
 #pragma omp parallel //fork-join construct
@@ -49,6 +52,6 @@ int main(int argc, char const *argv[]) {
     }
 
     printf("actual num threads=%d\n", actual_num_threads);
-    printf("time=%0.3f\n", omp_get_wtime() - start_time);
+    printf("time=%0.3f sec\n", omp_get_wtime() - start_time);
     printf("pi=%0.20f\n", pi);
 }
