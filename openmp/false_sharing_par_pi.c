@@ -14,11 +14,9 @@ void thread_body(double *sum, double step, int *actual_num_threads) {
     int num_threads = omp_get_num_threads();
     int id = omp_get_thread_num();
 
-    // we choose a random thread to update actual_num_threads 
-    // (as the environment can choose to create fewer threads than requested)
-    if(id == 0) {
-        *actual_num_threads = num_threads;
-    }
+    //we choose master thread to update actual_num_threads
+#pragma omp master    
+    *actual_num_threads = num_threads;
 
     for(size_t i = id; i < NUM_STEPS; i += num_threads) {
         double x = (i + 0.5) * step;

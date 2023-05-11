@@ -11,14 +11,9 @@
 #define NUM_THREADS 16 //default value (number of virtual cores on my machine)
 static double pi = 0;
 
-void thread_body(double step, int *actual_num_threads) {
+void thread_body(double step) {
     int num_threads = omp_get_num_threads();
-    int id = omp_get_thread_num();
-
-    //we choose a random thread to update actual_num_threads
-    if(id == 0) {
-        *actual_num_threads = num_threads;
-    }    
+    int id = omp_get_thread_num();   
 
     //round robin distribution of the thread's job
     double sum = 0;
@@ -39,8 +34,7 @@ int main(int argc, char const *argv[]) {
     double step = 1.0 / NUM_STEPS;
 
     //CAUTION: the environment can choose to create fewer threads than requested
-    omp_set_num_threads(requested_num_threads);
-    int actual_num_threads;
+    omp_set_num_threads(requested_num_threads);    
 
     printf("NUM_STEPS=%ld\n", NUM_STEPS);
     printf("requested_num_threads=%d\n", requested_num_threads);    
@@ -48,10 +42,9 @@ int main(int argc, char const *argv[]) {
 
 #pragma omp parallel //fork-join construct
     {
-        thread_body(step, &actual_num_threads);
+        thread_body(step);
     }
-
-    printf("actual num threads=%d\n", actual_num_threads);
+    
     printf("time=%0.3f sec\n", omp_get_wtime() - start_time);
     printf("pi=%0.20f\n", pi);
 }

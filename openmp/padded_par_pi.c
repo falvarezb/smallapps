@@ -15,10 +15,10 @@ void thread_body(double sum[][PAD], double step, int *actual_num_threads) {
     int num_threads = omp_get_num_threads();
     int id = omp_get_thread_num();
 
-    //we choose a random thread to update actual_num_threads
-    if(id == 0) {
-        *actual_num_threads = num_threads;
-    }
+    //we choose master thread to update actual_num_threads
+#pragma omp master    
+    *actual_num_threads = num_threads;
+
 
     // printf(" thread(%d)\n", id);
 
@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]) {
     if(argc > 1) {
         requested_num_threads = atoi(argv[1]);
     }
-    
+
     double step = 1.0 / NUM_STEPS;
 
     //CAUTION: the environment can choose to create fewer threads than requested
