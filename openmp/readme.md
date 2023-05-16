@@ -79,20 +79,22 @@ Here's a comparison of the different versions for a given number of steps of 5,0
         <tr>
             <th>threads</th>
             <th>serial</th>
-            <th>false sharing</th>
-            <th>padded</th>
-            <th>synced</th>
-            <th>for-reduction</th>
+            <th>SPMD (false sharing)</th>
+            <th>SPMD (padded)</th>
+            <th>SPMD (synced)</th>
+            <th>Worksharing (for-reduction)</th>
+            <th>divide and conquer</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>8</td>
-            <td rowspan=4>14.035</td>
+            <td rowspan=5>14.035</td>
             <td>20.931</td>
             <td>2.374</td>
             <td>2.143</td>
-            <td rowspan=4>2.314</td>
+            <td rowspan=5>2.314</td>
+            <td rowspan=5>1.886</td>
         </tr>
         <tr>
             <td>16</td>
