@@ -162,6 +162,9 @@ Module.symvers
 Mkfile.old
 dkms.conf
 **/out/
+**/OMP_exercises/
 
 # macOS
 .DS_Store
+
+
