@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "omp.h"
 
 #define NUM_STEPS 5000000000L
 #define NUM_STEPS_THRESHOLD 100000 //threshold to create new tasks

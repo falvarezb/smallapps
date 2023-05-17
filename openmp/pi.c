@@ -1,14 +1,9 @@
-/**
- * program to calculate value of pi by solving integral
- */
-
 #include <stdio.h>
 #include <sys/time.h>
-#include "omp.h"
 
 #define NUM_STEPS 5000000000L
 
-int main(int argc, char const *argv[]) {
+int main(__unused int argc, __unused char const *argv[]) {
     printf("NUM_STEPS=%ld\n", NUM_STEPS);
     double sum = 0;
     double step = 1.0 / (double)NUM_STEPS;
