@@ -7,7 +7,6 @@
 #include <string.h>
 #include "pi.h"
 
-#define NUM_STEPS 5000000000L
 #define NUM_STEPS_THRESHOLD 100000 //threshold to create new tasks
 
 double task(size_t start, size_t end, double step, size_t steps_threshold) {
@@ -33,21 +32,19 @@ double task(size_t start, size_t end, double step, size_t steps_threshold) {
     return sum;
 }
 
-double compute_pi(void) {
-    const double step = 1.0 / NUM_STEPS;
+void compute_pi(struct pi *args) {    
     double sum;
-#pragma omp parallel shared(sum,step)
+#pragma omp parallel
     {
         #pragma omp single
-        sum = task(0, NUM_STEPS, step, NUM_STEPS_THRESHOLD);
+        sum = task(0, args->num_steps, args->step_size, NUM_STEPS_THRESHOLD);
     }
     
-    double pi = step * sum;
-    return pi;
+    args->pi = args->step_size * sum;    
 }
 
 int main(int argc, char const *argv[]) {
-    printf("NUM_STEPS=%ld\n", NUM_STEPS);    
-    double pi = timeit(compute_pi,2);
-    printf("pi=%0.20f\n", pi);
+    struct pi args = parse_args(argc, argv);
+    timeit(compute_pi, &args,2);
+    printf("pi=%0.20f\n", args.pi);
 }

@@ -1,25 +1,20 @@
-#include <stdio.h>
 #include "pi.h"
 
-#define NUM_STEPS 5000000000L
-
-double compute_pi(void) {
-    double sum = 0;
-    const double step = 1.0 / (double)NUM_STEPS;    
+void compute_pi(struct pi *args) {
+    double sum = 0;        
 #pragma omp parallel for reduction (+:sum)   
-    for(size_t i = 0; i < NUM_STEPS; i++) {
-        double x = (i + 0.5) * step;
+    for(size_t i = 0; i < args->num_steps; i++) {
+        double x = (i + 0.5) * args->step_size;
         sum += 4.0 / (1.0 + x * x);
     }
 
-    double pi = step * sum;
-    return pi;
+    args->pi = args->step_size * sum;    
 }
 
 int main(__unused int argc, __unused char const *argv[]) {
-    printf("NUM_STEPS=%ld\n", NUM_STEPS);
-    double pi = timeit(compute_pi, 2);
-    printf("pi=%0.20f\n", pi);
+    struct pi args = parse_args(argc, argv);
+    timeit(compute_pi, &args, 2);
+    printf("pi=%0.20f\n", args.pi);
 }
 
 

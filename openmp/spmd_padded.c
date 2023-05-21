@@ -1,37 +1,24 @@
-/**
- * parallel version of the program to calculate value of pi by solving integral
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "omp.h"
 #include "pi.h"
 
-#define NUM_STEPS 5000000000L
-#define NUM_THREADS 16 //default value (number of virtual cores on my machine)
 #define PAD 8 // 8 doubles  = 64 bytes (assuming 64-byte L1 cache line size)
 
-void thread_body(double sum[][PAD], double step, int *actual_num_threads) {
+void thread_body(double sum[][PAD], size_t num_steps, double step, int *actual_num_threads) {
     int num_threads = omp_get_num_threads();
     int id = omp_get_thread_num();
 
     //we choose master thread to update actual_num_threads
 #pragma omp master    
-    *actual_num_threads = num_threads;
-
-
-    // printf(" thread(%d)\n", id);
+    *actual_num_threads = num_threads;    
 
     //round robin distribution of the thread's job
-    for(size_t i = id; i < NUM_STEPS; i += num_threads) {
+    for(size_t i = id; i < num_steps; i += num_threads) {
         double x = (i + 0.5) * step;
         sum[id][0] += 4.0 / (double)(1.0 + x * x);
     }
 }
 
-void compute_pi(struct pi* args) {
-    double step = 1.0 / NUM_STEPS;
+void compute_pi(struct pi* args) {    
     int actual_num_threads;
 
     // Padded arrays so elements are on distinct cache lines 
@@ -39,9 +26,9 @@ void compute_pi(struct pi* args) {
     double sum[args->requested_num_threads][PAD];
     memset(sum, 0, args->requested_num_threads * PAD * sizeof(double));            
 
-#pragma omp parallel //fork-join construct
+#pragma omp parallel
     {
-        thread_body(sum, step, &actual_num_threads);
+        thread_body(sum, args->num_steps, args->step_size, &actual_num_threads);
     }
 
     printf("actual num threads=%d\n", actual_num_threads);
@@ -50,22 +37,17 @@ void compute_pi(struct pi* args) {
         total_sum += sum[i][0];
     }
 
-    args->pi = step * total_sum;    
+    args->pi = args->step_size * total_sum;    
 }
 
 int main(int argc, char const *argv[]) {
-    printf("NUM_STEPS=%ld\n", NUM_STEPS);
-    int requested_num_threads = NUM_THREADS;
-    if(argc > 1) {
-        requested_num_threads = atoi(argv[1]);
-    }
-    printf("requested_num_threads=%d\n", requested_num_threads);
+    struct pi args = parse_args(argc, argv);
     printf("PAD=%d\n", PAD);
     
     //CAUTION: the environment can choose to create fewer threads than requested
-    omp_set_num_threads(requested_num_threads);
-
-    struct pi args = {.requested_num_threads = requested_num_threads};
+    // actual num threads to be checked in the parallel region    
+    omp_set_num_threads(args.requested_num_threads);
+    
     timeit(compute_pi,&args,2);    
     printf("pi=%0.20f\n", args.pi);
 }
