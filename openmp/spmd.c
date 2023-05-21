@@ -26,10 +26,7 @@ void thread_body(double *sum, double step, int *actual_num_threads) {
 }
 
 double compute_pi(int requested_num_threads) {
-    double step = 1.0 / NUM_STEPS;
-
-    //CAUTION: the environment can choose to create fewer threads than requested
-    omp_set_num_threads(requested_num_threads);
+    double step = 1.0 / NUM_STEPS;    
     int actual_num_threads;
 
     // If you promote scalars to an array to support creation of an SPMD program, 
@@ -60,7 +57,10 @@ int main(int argc, char const *argv[]) {
     if(argc > 1) {
         requested_num_threads = atoi(argv[1]);
     }  
-    printf("requested_num_threads=%d\n", requested_num_threads);  
+    printf("requested_num_threads=%d\n", requested_num_threads);
+    //CAUTION: the environment can choose to create fewer threads than requested
+    omp_set_num_threads(requested_num_threads);
+     
     double pi = timeit2(compute_pi,requested_num_threads,2);    
     printf("pi=%0.20f\n", pi);
 }
