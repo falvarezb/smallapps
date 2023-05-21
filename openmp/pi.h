@@ -4,15 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 
-// this value can be overwritten by passing an argument to the program
+// this value can be overridden by passing an argument to the program
 #define DEFAULT_NUM_STEPS 5000000000UL 
 
 // = number of logical processors in my machine
-// this value can be overwritten by passing an argument to the program
-#define DEFAULT_NUM_THREADS 16  
+// this value can be overridden by passing an argument to the program
+#define DEFAULT_NUM_THREADS 16 
+
+// this value can be overridden by passing an argument to the program
+#define NUM_REPETITIONS 1
 
 
 struct pi {
+    int num_repetitions;
     size_t num_steps;
     int requested_num_threads;
     double step_size;

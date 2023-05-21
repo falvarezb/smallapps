@@ -67,7 +67,7 @@ A more portable alternative is to get rid of the array altogether and instead us
 
 ## How to compile
 
-```
+```bash
 #single-threaded version of pi.c
 cc pi.c util.c -o out/serialpi
 #multi-threaded version of pi.c
@@ -85,7 +85,7 @@ cc dandc.c util.c -o out/serialdandc
 
 ## How to run
 
-All version take as argument the number of steps and, in addition to that, the _spmd*_ versions may take a second argument to specify the number of threads.
+All version take as argument the number of repetitions and number of steps and, in addition to that, the _spmd*_ versions may take one more  argument to specify the number of threads.
 
 If no argument is passed, the default values defined in the header _pi.h_ are used.
 

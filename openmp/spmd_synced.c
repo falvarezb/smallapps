@@ -6,7 +6,7 @@ static double pi = 0;
 void thread_body(size_t num_steps, double step_size) {
     int num_threads = omp_get_num_threads();
     int id = omp_get_thread_num();
-    
+
     double sum = 0;
     for(size_t i = id; i < num_steps; i += num_threads) {
         double x = (i + 0.5) * step_size;
@@ -16,8 +16,8 @@ void thread_body(size_t num_steps, double step_size) {
     pi += step_size * sum;
 }
 
-void compute_pi(struct pi* args) {
-    pi = 0;    
+void compute_pi(struct pi *args) {
+    pi = 0;
 
 #pragma omp parallel
     {
@@ -26,8 +26,8 @@ void compute_pi(struct pi* args) {
     args->pi = pi;
 }
 
-int main(int argc, char const *argv[]) {    
+int main(int argc, char const *argv[]) {
     struct pi args = parse_args(argc, argv);
-    timeit(compute_pi,&args,2);    
+    timeit(compute_pi, &args, args.num_repetitions);
     printf("pi=%0.20f\n", args.pi);
 }

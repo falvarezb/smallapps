@@ -45,6 +45,6 @@ int main(int argc, char const *argv[]) {
     // actual num threads to be checked in the parallel region    
     omp_set_num_threads(args.requested_num_threads);
     
-    timeit(compute_pi, &args, 2);
+    timeit(compute_pi, &args, args.num_repetitions);
     printf("pi=%0.20f\n", args.pi);
 }

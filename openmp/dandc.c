@@ -37,6 +37,6 @@ void compute_pi(struct pi *args) {
 
 int main(int argc, char const *argv[]) {
     struct pi args = parse_args(argc, argv);
-    timeit(compute_pi, &args, 2);
+    timeit(compute_pi, &args, args.num_repetitions);
     printf("pi=%0.20f\n", args.pi);
 }
