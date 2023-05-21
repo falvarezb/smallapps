@@ -25,14 +25,14 @@ void thread_body(double *sum, double step, int *actual_num_threads) {
     }
 }
 
-double compute_pi(int requested_num_threads) {
+void compute_pi(struct pi* args) {
     double step = 1.0 / NUM_STEPS;    
     int actual_num_threads;
 
     // If you promote scalars to an array to support creation of an SPMD program, 
     // the array elements are contiguous in memory and hence share cache lines
-    double sum[requested_num_threads];
-    memset(sum, 0, requested_num_threads * sizeof(double));        
+    double sum[args->requested_num_threads];
+    memset(sum, 0, args->requested_num_threads * sizeof(double));        
 
 #pragma omp parallel //fork-join construct
     {
@@ -45,9 +45,7 @@ double compute_pi(int requested_num_threads) {
         total_sum += sum[i];
     }
 
-    double pi = step * total_sum;
-    return pi;
-    
+    args->pi = step * total_sum;    
 }
 
 int main(int argc, char const *argv[]) {
@@ -61,6 +59,7 @@ int main(int argc, char const *argv[]) {
     //CAUTION: the environment can choose to create fewer threads than requested
     omp_set_num_threads(requested_num_threads);
      
-    double pi = timeit2(compute_pi,requested_num_threads,2);    
-    printf("pi=%0.20f\n", pi);
+    struct pi args = {.requested_num_threads = requested_num_threads};
+    timeit4(compute_pi,&args,2);    
+    printf("pi=%0.20f\n", args.pi);
 }

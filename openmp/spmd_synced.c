@@ -26,7 +26,7 @@ void thread_body(double step) {
     pi += step * sum;
 }
 
-void compute_pi(void) {
+void compute_pi(struct pi* args) {
     pi = 0;
     double step = 1.0 / NUM_STEPS;
 
@@ -34,6 +34,7 @@ void compute_pi(void) {
     {
         thread_body(step);
     }
+    args->pi = pi;
 }
 
 int main(int argc, char const *argv[]) {
@@ -43,6 +44,7 @@ int main(int argc, char const *argv[]) {
         requested_num_threads = atoi(argv[1]);
     }
     printf("requested_num_threads=%d\n", requested_num_threads);
-    timeit3(compute_pi,2);    
-    printf("pi=%0.20f\n", pi);
+    struct pi args;
+    timeit4(compute_pi,&args,2);    
+    printf("pi=%0.20f\n", args.pi);
 }
