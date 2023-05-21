@@ -19,6 +19,7 @@
                 // "-lomp",
                 "-g",
                 "${file}",
+                "util.c",
                 "-o",
                 "${fileDirname}/out/${fileBasenameNoExtension}"
             ],
