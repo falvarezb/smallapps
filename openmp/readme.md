@@ -7,7 +7,7 @@ A great feature of OpenMP is that the same code can be compiled to run sequentia
 The examples on this repo are taken from these [OpenMP resources](https://www.openmp.org/resources/tutorials-articles/)
 
 
-# Environment configuration (MacOSX)
+# Environment configuration (macOS)
 
 Apple ships its own version of [LLVM](https://llvm.org/) with Xcode and does not support OpenMP. Therefore, it is necessary to install LLVM separately:
 
@@ -34,9 +34,9 @@ CPPFLAGS="-I/usr/local/opt/libomp/include"
 LDFLAGS="-L/usr/local/opt/libomp/lib"
 ```
 
-# Examples
+# Parallel programming models with OpenMP
 
-Program to estimate the value of π by doing the numerical integration of:
+In order to illustrate the different techniques to do parallel programming with OpenMP, we will write a program to approximate the value of π by doing the numerical integration of:
 
 $$\int_{0}^{1}\frac{4.0}{1+x^2}dx$$
 
@@ -73,26 +73,34 @@ cc pi.c util.c -o out/serialpi
 #multi-threaded version of pi.c
 /usr/local/opt/llvm/bin/clang -fopenmp pi.c util.c -o out/parpi
 
-/usr/local/opt/llvm/bin/clang -fopenmp spmd.c -o out/spmd
-/usr/local/opt/llvm/bin/clang -fopenmp spmd_padded.c -o out/spmd_padded       
-/usr/local/opt/llvm/bin/clang -fopenmp spmd_synced.c -o out/spmd_synced
-
 #single-threaded version of dandc.c
 cc dandc.c util.c -o out/serialdandc
 #multi-threaded version of dandc.c
 /usr/local/opt/llvm/bin/clang -fopenmp dandc.c util.c -o out/pardandc
+
+/usr/local/opt/llvm/bin/clang -fopenmp spmd.c util.c -o out/spmd
+/usr/local/opt/llvm/bin/clang -fopenmp spmd_padded.c util.c -o out/spmd_padded    
+/usr/local/opt/llvm/bin/clang -fopenmp spmd_synced.c util.c -o out/spmd_synced
 ```
+
+## How to run
+
+All version take as argument the number of steps and, in addition to that, the _spmd*_ versions may take a second argument to specify the number of threads.
+
+If no argument is passed, the default values defined in the header _pi.h_ are used.
 
 ## Benchmark
 
-Here's a comparison of the different versions based on the following parameters:
+Here's a comparison of the execution time of the different versions based on the following parameters:
 
 - number of steps = 5,000,000,000
 - divide and conquer's parallelism factor = 100,000 steps
-- padding size of the SMPD version = 64 bytes (= cache line size)
+- padding size of the SPMD version = 64 bytes (= cache line size)
 - number of physical cores: 8
 - number of logical processors: 16
 - worksharing versions (pi.c and dandc.c) use the default number of threads (normally one per logical processor)
+
+The times are measured in seconds and are the average value of 10 runs.
 
 <table>
     <thead>
@@ -103,7 +111,7 @@ Here's a comparison of the different versions based on the following parameters:
             <th>serial d&c</th>
             <th>parallel d&c</th>
             <th>spmd</th>
-            <th>padded smpd</th>
+            <th>padded spmd</th>
             <th>synced spmd</th>                                    
         </tr>
     </thead>

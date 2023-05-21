@@ -10,8 +10,7 @@ void thread_body(double sum[][PAD], size_t num_steps, double step, int *actual_n
     //we choose master thread to update actual_num_threads
 #pragma omp master    
     *actual_num_threads = num_threads;    
-
-    //round robin distribution of the thread's job
+    
     for(size_t i = id; i < num_steps; i += num_threads) {
         double x = (i + 0.5) * step;
         sum[id][0] += 4.0 / (double)(1.0 + x * x);
