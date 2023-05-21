@@ -69,18 +69,18 @@ A more portable alternative is to get rid of the array altogether and instead us
 
 ```
 #single-threaded version of pi.c
-cc pi.c -o out/serialpi
+cc pi.c util.c -o out/serialpi
 #multi-threaded version of pi.c
-/usr/local/opt/llvm/bin/clang -fopenmp pi.c -o out/parpi
+/usr/local/opt/llvm/bin/clang -fopenmp pi.c util.c -o out/parpi
 
 /usr/local/opt/llvm/bin/clang -fopenmp spmd.c -o out/spmd
 /usr/local/opt/llvm/bin/clang -fopenmp spmd_padded.c -o out/spmd_padded       
 /usr/local/opt/llvm/bin/clang -fopenmp spmd_synced.c -o out/spmd_synced
 
 #single-threaded version of dandc.c
-cc dandc.c -o out/serialdandc
+cc dandc.c util.c -o out/serialdandc
 #multi-threaded version of dandc.c
-/usr/local/opt/llvm/bin/clang -fopenmp dandc.c -o out/pardandc
+/usr/local/opt/llvm/bin/clang -fopenmp dandc.c util.c -o out/pardandc
 ```
 
 ## Benchmark
