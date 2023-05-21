@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include "pi.h"
 
-void timeit4(void (*func)(struct pi*), struct pi* args, int repeat) {        
+void timeit(void (*func)(struct pi*), struct pi* args, int repeat) {        
     double time_sum = 0;
 
     for(int i = 0; i < repeat; i++) {

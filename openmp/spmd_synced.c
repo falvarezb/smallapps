@@ -45,6 +45,6 @@ int main(int argc, char const *argv[]) {
     }
     printf("requested_num_threads=%d\n", requested_num_threads);
     struct pi args;
-    timeit4(compute_pi,&args,2);    
+    timeit(compute_pi,&args,2);    
     printf("pi=%0.20f\n", args.pi);
 }

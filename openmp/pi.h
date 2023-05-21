@@ -6,6 +6,6 @@ struct pi {
     double pi;
 };
 
-void timeit4(void (*func)(struct pi*), struct pi* args, int repeat);
+void timeit(void (*func)(struct pi*), struct pi* args, int repeat);
 
 #endif

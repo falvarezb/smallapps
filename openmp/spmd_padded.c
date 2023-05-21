@@ -66,6 +66,6 @@ int main(int argc, char const *argv[]) {
     omp_set_num_threads(requested_num_threads);
 
     struct pi args = {.requested_num_threads = requested_num_threads};
-    timeit4(compute_pi,&args,2);    
+    timeit(compute_pi,&args,2);    
     printf("pi=%0.20f\n", args.pi);
 }
