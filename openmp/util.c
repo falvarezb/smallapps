@@ -14,7 +14,7 @@ struct pi parse_args(int argc, char const *argv[]) {
     int arg_index = 1;
     if(argc > arg_index) {
         //TODO check for values out of range
-        if((requested_num_threads = atoi(argv[arg_index])) == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
+        if((num_repetitions = atoi(argv[arg_index])) == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
             printf("invalid number of repetitions [%s]\n", argv[arg_index]);
             exit(EXIT_FAILURE);
         }
