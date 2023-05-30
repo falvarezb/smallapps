@@ -18,7 +18,8 @@
 
         section   .text
 
-utilfunc:        
+utilfunc: 
+        ; in this function, instead of storing data in the stack, we do it in the registers       
         add rdi, 2  ; xx
         add rsi, 3  ; yy
         add rdx, 4  ; zz
