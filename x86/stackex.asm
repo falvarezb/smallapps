@@ -18,8 +18,61 @@
 
         section   .text
 
+utilfunc:        
+        add rdi, 2  ; xx
+        add rsi, 3  ; yy
+        add rdx, 4  ; zz
+
+        xor rcx, rcx
+        add rcx, rdi
+        add rcx, rsi
+        add rcx, rdx    ; sum
+
+        mov r11, rdx ; saving rdx as it is overwritten by imul
+        mov rax, 1
+        imul rdi
+        imul rsi
+        imul r11
+        add rax, rcx
+
+        ret
+
 myfunc:
-        mov rax, 123
+        push rbp
+        mov rbp, rsp   
+        sub rsp, 0x10
+
+        mov r11, rdx ; saving rdx as it is overwritten by imul
+        mov rax, rdi
+        imul rsi        
+        imul r11
+        imul rcx
+        imul r8
+        imul r9
+        imul qword [rbp+0x10]
+        imul qword [rbp+0x18]
+        mov [rbp-0x8], rax  ; storing local variable xx in the stack frame
+
+        mov rax, rdi
+        add rax, rsi
+        add rax, r11
+        add rax, rcx
+        add rax, r8
+        add rax, r9
+        add rax, [rbp+0x10]
+        add rax, [rbp+0x18]
+        mov [rbp-0x10], rax  ; storing local variable yy in the stack frame
+
+        mov rax, [rbp-0x8]
+        idiv qword [rbp-0x10]     ; quotient -> rax, remainder -> rdx
+        mov rdi, [rbp-0x8]
+        mov rsi, [rbp-0x10]
+
+        call utilfunc
+        add rax, 20
+
+        add rsp, 0x10
+        pop rbp
         ret
 
 _main:
