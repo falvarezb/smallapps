@@ -35,6 +35,6 @@ long myfunc(long a, long b, long c, long d,
 int main(int argc, char const *argv[])
 {
     long result = myfunc(1,2,3,4,5,6,7,8);
-    printf("result=5%ld", result);
+    printf("result=%ld", result);
     return 0;
 }
