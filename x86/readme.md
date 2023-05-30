@@ -5,6 +5,7 @@ Assembler reference: [NASM](https://www.nasm.us/xdoc/2.15.05/html/nasmdoc0.html)
 Use of %rsp and %rbp in [stack frame layout](https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64/)
 [ABI](https://github.com/hjl-tools/x86-psABI/wiki/X86-psABI)
 [Dive into systems](https://diveintosystems.org/book/)
+[x86 cheatsheet](https://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf)
 
 
 ## Utilities
