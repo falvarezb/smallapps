@@ -1,11 +1,10 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include "pi.h"
 
-int parse_int(char *arg, char *opt) {
+int parse_int(char *arg, int opt) {
     int value = atoi(arg);
     //TODO check for values out of range (values out of range have undefined behaviour)
     if(value == 0) {
@@ -13,7 +12,7 @@ int parse_int(char *arg, char *opt) {
         printf("invalid argument [%s] in option -%c \n", optarg, opt);
         exit(EXIT_FAILURE);
     }
-
+    return value;
 }
 
 struct pi parse_args(int argc, char const *argv[]) {
@@ -23,8 +22,11 @@ struct pi parse_args(int argc, char const *argv[]) {
     int opt;
     while((opt = getopt(argc, (char *const *)argv, "r:s:t:")) != -1) {
         switch(opt) {
-            case 'r': case 't':
-                parse_int(optarg, opt);
+            case 'r':
+                num_repetitions = parse_int(optarg, opt);
+                break;
+            case 't':
+                requested_num_threads = parse_int(optarg, opt);
                 break;
             case 's':
                 num_steps = strtoul(optarg, NULL, 0);
@@ -52,18 +54,7 @@ struct pi parse_args(int argc, char const *argv[]) {
     return args;
 }
 
-void timeit(void (*func)(struct pi *), struct pi *args, int repeat) {
-    double time_sum = 0;
 
-    for(int i = 0; i < repeat; i++) {
-        struct timeval start_tv, end_tv;
-        gettimeofday(&start_tv, NULL);
-        func(args);
-        gettimeofday(&end_tv, NULL);
-        double runtime = end_tv.tv_sec - start_tv.tv_sec + (end_tv.tv_usec - start_tv.tv_usec) * 1e-6;
-        printf("time=%0.3f sec\n", runtime);
-        time_sum += runtime;
-    }
 
-    printf("avg_time=%0.3f sec\n", time_sum / repeat);
-}
+
+

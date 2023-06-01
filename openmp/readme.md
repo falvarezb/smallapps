@@ -85,7 +85,13 @@ cc dandc.c util.c -o out/serialdandc
 
 ## How to run
 
-All version take as argument the number of repetitions and number of steps and, in addition to that, the _spmd*_ versions may take one more  argument to specify the number of threads.
+Number of repetitions, threads and steps can be specified as arguments to the programs, for instance:
+
+```
+Usage: ./out/serialpi [-r num_repetitions] [-s num_steps] [-t num_threads]
+```
+
+The number of threads is only relevant for the _spmd*_ versions.
 
 If no argument is passed, the default values defined in the header _pi.h_ are used.
 
