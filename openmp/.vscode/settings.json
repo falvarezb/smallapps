@@ -3,6 +3,7 @@
         "stdio.h": "c",
         "omp.h": "c",
         "stdlib.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "getopt.h": "c"
     }
 }

@@ -1,48 +1,48 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include "pi.h"
 
+int parse_int(char *arg, char *opt) {
+    int value = atoi(arg);
+    //TODO check for values out of range (values out of range have undefined behaviour)
+    if(value == 0) {
+        // here 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
+        printf("invalid argument [%s] in option -%c \n", optarg, opt);
+        exit(EXIT_FAILURE);
+    }
+
+}
 
 struct pi parse_args(int argc, char const *argv[]) {
     size_t num_steps = DEFAULT_NUM_STEPS;
     int requested_num_threads = DEFAULT_NUM_THREADS, num_repetitions = NUM_REPETITIONS;
 
-    // PARSING NUM REPETITIONS (strictly speaking, the value parsed is interpreted as number of executions)
-    int arg_index = 1;
-    if(argc > arg_index) {
-        //TODO check for values out of range
-        if((num_repetitions = atoi(argv[arg_index])) == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
-            printf("invalid number of repetitions [%s]\n", argv[arg_index]);
-            exit(EXIT_FAILURE);
-        }
+    int opt;
+    while((opt = getopt(argc, (char *const *)argv, "r:s:t:")) != -1) {
+        switch(opt) {
+            case 'r': case 't':
+                parse_int(optarg, opt);
+                break;
+            case 's':
+                num_steps = strtoul(optarg, NULL, 0);
+                if(num_steps == ULONG_MAX && errno == ERANGE) {
 
-        // PARSING NUM STEPS
-        arg_index = 2;
-        if(argc > arg_index) {
-            num_steps = strtoul(argv[arg_index], NULL, 0);
-            if(num_steps == ULONG_MAX) {
-                if(errno == ERANGE) {
-                    printf("number of steps [%s] out of range\n", argv[arg_index]);
+                    printf("number of steps [%s] out of range\n", optarg);
+                    exit(EXIT_FAILURE);
+
+                } else if(num_steps == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
+                    printf("invalid number of steps [%s]\n", optarg);
                     exit(EXIT_FAILURE);
                 }
-            } else if(num_steps == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
-                printf("invalid number of steps [%s]\n", argv[arg_index]);
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-r num_repetitions] [-s num_steps] [-t num_threads]\n", argv[0]);
                 exit(EXIT_FAILURE);
-            }
-
-            // PARSING NUM THREADS
-            arg_index = 3;
-            if(argc > arg_index) {
-                //TODO check for values out of range
-                if((requested_num_threads = atoi(argv[arg_index])) == 0) { // 0 can represent conversion failure or a genuine value: in both cases, it is considered an error            
-                    printf("invalid number of threads [%s]\n", argv[arg_index]);
-                    exit(EXIT_FAILURE);
-                }
-            }
         }
+
     }
 
     printf("NUM_REPETITIONS=%d\n", num_repetitions);
