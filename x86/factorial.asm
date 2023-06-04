@@ -1,5 +1,16 @@
+; -----------------------------------------------------------------------------
+; A 64-bit Linux application to calculate the factorial of the value initially
+; store in %r8. 
+
+; To assemble and run:
+;
+;     nasm -fmacho64 factorial.asm -o out/factorial.o && gcc out/factorial.o -o out/factorial && ./out/factorial
+; -----------------------------------------------------------------------------
+
         global     _main
         default rel
+        extern  _printf
+
         section   .text
 _main:
         mov r8, 0   ; factorial argument
@@ -13,23 +24,19 @@ factorial:
         mul r8          ; mul stores the result implicitly on rax
         dec r8          ; decrement factorial argument
         cmp r8, 2       ; is factorial argument >= 2
-        jge factorial   ; yes, new recursive call to factorial
+        jge factorial   ; yes, new loop iteration
 
 done:
-        mov       rcx, output
-        mov       qword [rcx], rax
-        inc       rcx
-        mov       byte [rcx], 10
-        mov       rax, 0x02000004         ; system call for write
-        mov       rdi, 1                  ; file handle 1 is stdout
-        mov       rsi, output             ; address of string to output
-        mov       rdx, dataSize           ; number of bytes
-        syscall                           ; invoke operating system to do the write
+        lea rdi, [format]
+        mov rsi, rax
+        xor rax, rax
+        sub rsp, 0x8   ; align stack
+        call _printf
+        add rsp, 0x8
 
         mov       rax, 0x02000001         ; system call for exit
         xor       rdi, rdi                ; exit code 0
         syscall                           ; invoke operating system to exit
 
-        section .bss  
-dataSize  equ   16
-output:   resb  dataSize
+        section .data  
+format:   db  "%ld", 10, 0
