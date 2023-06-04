@@ -6,6 +6,7 @@ Use of %rsp and %rbp in [stack frame layout](https://eli.thegreenplace.net/2011/
 [ABI](https://github.com/hjl-tools/x86-psABI/wiki/X86-psABI)
 [Dive into systems](https://diveintosystems.org/book/)
 [x86 cheatsheet](https://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf)
+[IEEE 754 Floating Point converter](https://baseconvert.com/ieee-754-floating-point)
 
 
 ## Utilities
