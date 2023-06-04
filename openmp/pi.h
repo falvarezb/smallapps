@@ -6,7 +6,7 @@
 #include <sys/time.h>
 
 // this value can be overridden with the option -s
-#define DEFAULT_NUM_STEPS 5000000000UL 
+#define DEFAULT_NUM_STEPS 1e9 
 
 // this value can be overridden with the option -t
 #define DEFAULT_NUM_THREADS 16 
