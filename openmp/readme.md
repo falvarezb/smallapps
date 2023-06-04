@@ -88,7 +88,7 @@ cc dandc.c util.c -o out/serialdandc
 Number of repetitions, threads and steps can be specified as arguments to the programs, for instance:
 
 ```
-Usage: ./out/serialpi [-r num_repetitions] [-s num_steps] [-t num_threads]
+Usage: ./serialpi [-r num_repetitions] [-s num_steps] [-t num_threads]
 ```
 
 The number of threads is only relevant for the _spmd*_ versions.

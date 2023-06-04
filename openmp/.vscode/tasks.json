@@ -54,8 +54,9 @@
                 // "-lomp",
                 "-g",
                 "-c",
-                "${file}",
-                "util.c"                
+                "${file}",                
+                "-o",
+                "${fileDirname}/out/${fileBasenameNoExtension}.o"                
             ],
             "options": {
                 "cwd": "${fileDirname}"
