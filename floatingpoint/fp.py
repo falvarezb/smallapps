@@ -213,8 +213,8 @@ def prettify(r):
     return f"|{r[0]: < 5}  |  {r[1]: < 25}  |  {r[2]: <27} | {r[3]: <9}|"
 
 
-def next_binary(bits) -> bool:
-    """Calculate next value corresponding to the bit pattern passed as argument assuming bits[0] is the MSB (most-significant bit)
+def next_binary_value(bits) -> bool:
+    """Add 1 to the given bit pattern 'bits', assuming bits[0] is the MSB (most-significant bit)
 
     The argument is modified in place.
     Returns a boolean to indicate whether there has been overflow (True) or not (False)
@@ -232,9 +232,10 @@ def next_binary(bits) -> bool:
 
 
 def next_binary_fp(bits: List[int]) -> None:
-    """Calculate the next double-precision floating-point number
+    """Return the binary representation of the next double-precision floating-point number
 
     Argument is modified in place
+    Raise OverflowError if the argument or the resulting value is either 'Infinity' or 'NaN'
 
     Args:
         bits (list[int]): bit pattern of the original double-precision floating-point number
@@ -254,9 +255,11 @@ def next_binary_fp(bits: List[int]) -> None:
         # exponent is all 1s: either original number is Infinity or NaN
         raise OverflowError()
 
-    if next_binary(fraction):
+    if next_binary_value(fraction):
         # overflow in fraction, increase exponent
-        next_binary(exponent)
+        next_binary_value(exponent)
+        if is_infinity_or_nan(exponent):            
+            raise OverflowError()
 
     bits[12:] = fraction
     bits[1:12] = exponent

@@ -1,14 +1,14 @@
 from fp import *
 
 
-def test_next_binary_overflow():
+def test_next_binary_value_overflow():
     bits = [1, 1, 1]
-    assert next_binary(bits)    
+    assert next_binary_value(bits)    
 
 
-def test_next_binary_success():
+def test_next_binary_value_success():
     bits = [1, 0, 1]
-    assert not next_binary(bits)
+    assert not next_binary_value(bits)
     assert bits == [1, 1, 0]
 
 
@@ -28,11 +28,21 @@ def test_next_binary_fp_increase_exponent():
         bits) == "0100000000000000000000000000000000000000000000000000000000000000"
 
 
-def test_next_binary_fp_overflow():
+def test_next_binary_fp_argument_overflow():
     try:
         bits = str_to_list(
             "0111111111110011001100110011001100110011001100110011001100110011")
         next_binary_fp(bits)
+        assert False
+    except OverflowError:
+        assert True
+
+def test_next_binary_fp_result_overflow():
+    try:
+        bits = str_to_list(
+            "0111111111101111111111111111111111111111111111111111111111111111")
+        next_binary_fp(bits)
+        assert False
     except OverflowError:
         assert True
 
