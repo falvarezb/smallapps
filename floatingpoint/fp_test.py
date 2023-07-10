@@ -34,8 +34,8 @@ def test_next_binary_fp_argument_overflow():
             "0111111111110011001100110011001100110011001100110011001100110011")
         next_binary_fp(bits)
         assert False
-    except OverflowError:
-        assert True
+    except OverflowError as e:
+        assert e.args[0] == "NaN"        
 
 def test_next_binary_fp_result_overflow():
     try:
@@ -43,8 +43,8 @@ def test_next_binary_fp_result_overflow():
             "0111111111101111111111111111111111111111111111111111111111111111")
         next_binary_fp(bits)
         assert False
-    except OverflowError:
-        assert True
+    except OverflowError as e:
+        assert e.args[0] == "Infinity"
 
 
 def test_to_exact_decimal_positive():
@@ -79,3 +79,8 @@ def test_to_exact_decimal_infinity():
         assert False
     except OverflowError as e:
         assert e.args[0] == "Infinity"
+
+def test_fp_gen():
+    fp_generator = fp_gen(0.00000000000012343)
+    assert next(fp_generator) == (0.00000000000012343, mpf('0.0000000000001234300000000000102340991445314016317948146994609714965918101370334625244140625'), -43)
+    assert next(fp_generator) == (0.00000000000012343000000000004, mpf('0.00000000000012343000000000003547764811160377940497012878851013084613441606052219867706298828125'), -43)

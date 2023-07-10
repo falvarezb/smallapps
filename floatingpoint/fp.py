@@ -13,6 +13,19 @@ from functools import reduce
 mp.dps = 100
 
 
+def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
+    """Check if the bit pattern corresponds to the special floating-point values 'Infinity' or 'NaN'
+
+    If so, raise an OverflowError, else do nothing
+    """
+    # check if exponent is all ones
+    if reduce(lambda x, y: bool(x) and bool(y), exponent, True):
+        # check if fraction is all zeros
+        if not reduce(lambda x, y: bool(x) or bool(y), fraction, False):
+            raise OverflowError("Infinity")
+        raise OverflowError("NaN")
+
+
 def str_to_list(bits: str) -> List[int]:
     """Convert a string made up of digits into a list of integers
 
@@ -30,7 +43,7 @@ def list_to_str(bits: list) -> str:
 
 
 def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
-    """Convert a number in decimal representation to its corresponding double-precision floating-point number
+    """Convert a number in decimal representation to its corresponding double-precision floating-point binary format
 
     The floating-point number is returned in binary and hexadecimal format
 
@@ -156,39 +169,39 @@ def to_floating_point_binary_ieee754(decimal: float):
     return (bits, hex(int(bits, 2)))
 
 
-def to_floating_point_decimal(binary: str) -> float:
-    """Transforms binary to decimal
+# def to_floating_point_decimal(binary: str) -> float:
+#     """Transforms binary to decimal
 
-    The resulting value is not exact but the value rounded according to the IEEE_754 standard implemented by Python itself
+#     The resulting value is not exact but the value rounded according to the IEEE_754 standard implemented by Python itself
 
-    Args:
-        binary (str): string representing a binary number
+#     Args:
+#         binary (str): string representing a binary number
 
-    Returns:
-        float: double-precision floating-point decimal
-    """
-    sign = 1 if binary[0] == '0' else -1
-    fraction = binary[9:]
-    exp = int(binary[1:9], 2)-127
-    mantissa = 1.0
-    for i in range(1, len(fraction)+1):
-        decimal_value = int(fraction[i-1])*(0.5)**i
-        mantissa += decimal_value
-    return sign*mantissa*2**exp
+#     Returns:
+#         float: double-precision floating-point decimal
+#     """
+#     sign = 1 if binary[0] == '0' else -1
+#     fraction = binary[9:]
+#     exp = int(binary[1:9], 2)-127
+#     mantissa = 1.0
+#     for i in range(1, len(fraction)+1):
+#         decimal_value = int(fraction[i-1])*(0.5)**i
+#         mantissa += decimal_value
+#     return sign*mantissa*2**exp
 
 
-def to_exact_decimal(bits: List[int]) -> mpf:
+def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
     """Transform bit pattern representing a double-precision floating-point number to exact decimal
 
     In order to circumvate Python's floating-point arithmetic limitations, this function uses an arbitrary-precision library instead
     of Python's float
+
+    Return a tuple containing the exact decimal representation and the unbiased exponent of the binary format
     """
-    biased_exp = int(list_to_str(bits[1:12]), 2)
+    exponent_bits = bits[1:12]
+    biased_exp = int(list_to_str(exponent_bits), 2)
     fraction = bits[12:]
-    if biased_exp == 2047:
-        if len(list(filter(lambda x: x == 1, fraction))) > 0:
-            raise OverflowError("NaN")
-        raise OverflowError("Infinity")
+    check_infinity_or_nan(fraction, exponent_bits)
 
     half = mpf('0.5')
     exponent_bias = 1023
@@ -243,23 +256,14 @@ def next_binary_fp(bits: List[int]) -> None:
     Returns:
         list[int]: bit pattern of the next double-precision floating-point number
     """
-
-    def is_infinity_or_nan(exp: List[int]) -> bool:
-        # bit pattern of the exponent is all ones
-        return reduce(lambda x, y: bool(x) and bool(y), exp, True)
-
     fraction = bits[12:]
     exponent = bits[1:12]
-
-    if is_infinity_or_nan(exponent):
-        # exponent is all 1s: either original number is Infinity or NaN
-        raise OverflowError()
+    check_infinity_or_nan(fraction, exponent)
 
     if next_binary_value(fraction):
         # overflow in fraction, increase exponent
         next_binary_value(exponent)
-        if is_infinity_or_nan(exponent):            
-            raise OverflowError()
+        check_infinity_or_nan(fraction, exponent)
 
     bits[12:] = fraction
     bits[1:12] = exponent
@@ -271,8 +275,11 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
     The floating-point numbers generated are represented by its exact decimal representation (there is a one-to-one correspondence between
     the binary format of a floating-point number and its exact decimal representation)
 
-    In addition to the exact decimal representation, the generator also returns the default decimal representation and the value of the
-    unbiased exponent of the binary format.
+    The tuple produced by the generator contains:
+    - decimal representation up to the standard double-precision (around 16 digits)
+    - exact decimal representation
+    - unbiased exponent of the binary format
+
 
     The generator is seeded by a number in decimal representation that is passed to the function as an argument:
         - the seed must be zero or a positive number
