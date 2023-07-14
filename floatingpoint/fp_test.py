@@ -96,10 +96,39 @@ def test_fp_gen_infinity():
 
 def test_double_precision():
     # 7.100000000000003
-    assert double_precision("7.100000000000003") == 16
-    assert double_precision("7.1000000000000031974423109204508364200592041015625") == 50
-    assert double_precision("7.1000000000000034345") == 16
+    assert double_precision_significant_digits("7.100000000000003") == 16
+    assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == 50
+    assert double_precision_significant_digits("7.1000000000000034345") == 16
     # 7.1
-    assert double_precision("7.1000000000000000000000000000000000") == 16
-    assert double_precision("7.09999999999999968") == 17
+    assert double_precision_significant_digits("7.1000000000000000000000000000000000") == 16
+    assert double_precision_significant_digits("7.09999999999999968") == 17
         
+def test_round_to_nearest():
+    # no actual rounding, all digits are kept
+    assert round_to_nearest([1,1,1,0,0,1], 6) == [1,1,1,0,0,1]
+
+    # If the digit following the rounding position is 0, round down (truncate)
+    assert round_to_nearest([1,1,1,0,0,1], 3) == [1,1,1]
+
+    # If the digit following the rounding position is 1 and any of the following digits is 1, round up (add 1).
+    assert round_to_nearest([0,1,1,1,0,1], 3) == [1,0,0]
+
+    # If the digit following the rounding position is 1 and all of the following digits are 0, apply the tie-breaking rule:
+    #### If the digit at the rounding position is even (0), round down (truncate).
+    assert round_to_nearest([1,1,0,1,0,0], 3) == [1,1,0]
+    #### If the digit at the rounding position is odd (1), round up (add 1).
+    assert round_to_nearest([0,1,1,1,0,0], 3) == [1,0,0]
+
+    # Overflow error when rounding up
+    try:
+        round_to_nearest([1,1,1,1,0,1], 3)
+        assert False
+    except OverflowError:
+        assert True
+
+    # Overflow error when resolving tie
+    try:
+        round_to_nearest([1,1,1,1,0,0], 3)
+        assert False
+    except OverflowError:
+        assert True

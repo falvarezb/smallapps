@@ -1,5 +1,5 @@
 """
-Module with functions to handle the binary and decimal representations of floating-point numbers according to the IEEE 754 standard
+Module with functions to manipulate the binary and decimal representations of floating-point numbers according to the IEEE 754 standard
 
 Python's 'float' data type represents numbers as double-precision floating points. 
 To get around this limitation, some functions in this module make use of the mpmath arbitrary-precision library.
@@ -13,7 +13,7 @@ from functools import reduce
 mp.dps = 100
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
-    """Decompose the binary representation of a double-precision floating-point number into its elements: sign, fraction, unbiased exponent
+    """Decompose the binary representation of a double-precision floating-point number into its elements: sign, fraction bits, exponent bits, unbiased exponent
     """
     exponent_bits = bits[1:12]
     biased_exp = int(list_to_str(exponent_bits), 2)
@@ -23,8 +23,11 @@ def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[in
     sign = 1 if bits[0] == 0 else -1
     return [sign, fraction_bits, exponent_bits, unbiased_exp]
 
+def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: List[int]):
+    fp[12:] = fraction
+    fp[1:12] = exponent
 
-def double_precision(decimal_repr: str):
+def double_precision_significant_digits(decimal_repr: str):
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
@@ -54,7 +57,7 @@ def double_precision(decimal_repr: str):
     if trimmed_decimal_repr[-1] == '.':
         # remove radix point if it is the last character of the decimal representation
         trimmed_decimal_repr = trimmed_decimal_repr[:-1]
-    return double_precision(trimmed_decimal_repr)
+    return double_precision_significant_digits(trimmed_decimal_repr)
 
     
 
@@ -99,8 +102,8 @@ def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
     return (bits, hexrepr)
 
 
-def round_to_nearest(bits, kth: int, is_any_following_digit_1: bool = None):
-    """Round a binary integer to the k-th position using the rule "round to nearest, ties to even"
+def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool = None):
+    """Round a binary integer to the k-th position (1,2.... counting from the left) using the rule "round to nearest, ties to even"
 
     Rounds to the nearest value; if the number falls midway, it is rounded to the nearest value with 
     an even least significant digit.
@@ -122,19 +125,27 @@ def round_to_nearest(bits, kth: int, is_any_following_digit_1: bool = None):
     if len(bits) > kth:
         if bits[kth] == 0:
             # round down
-            bits = bits[:kth+1]
+            return bits[:kth]
         else:
-            is_any_following_digit_1 = len(filter(
-                lambda x: x == 1, bits[kth+1:])) != 0 if is_any_following_digit_1 is None else is_any_following_digit_1
+            is_any_following_digit_1 = len(list(filter(lambda x: x == 1, bits[kth+1:]))) != 0 if is_any_following_digit_1 is None else is_any_following_digit_1
             if is_any_following_digit_1:
                 # round up
-                add1(bits)
+                bits = bits[:kth]
+                if next_binary_value(bits):
+                    raise OverflowError()
+                return bits
             else:
                 # same distance, ties to even: round to the nearest even number (the one ending in 0)
                 if bits[kth-1] == 1:  # odd
-                    add1(bits)
-
-        bits = bits[:kth]
+                    bits = bits[:kth]
+                    if next_binary_value(bits):
+                        raise OverflowError()
+                    return bits
+                else:
+                    # even
+                    return bits[:kth]
+        
+    return bits
 
 
 def add1(bits):
@@ -281,8 +292,7 @@ def next_binary_fp(bits: List[int]) -> None:
         next_binary_value(exponent_bits)
         check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    bits[12:] = fraction_bits
-    bits[1:12] = exponent_bits
+    update_double_precision_fp(bits, fraction_bits, exponent_bits)    
 
 
 def fp_gen(seed: float) -> Tuple[float, mpf, int]:
