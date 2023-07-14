@@ -147,27 +147,6 @@ def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool =
         
     return bits
 
-
-def add1(bits):
-    """Add 1 to a binary integer
-
-    'bits' is modified in place
-
-    Args:
-        bits (list[int]): bits of the binary integer, bits[0] is the MSB (most-significant bit)
-    """
-
-    if bits[len(bits)-1] == 0:
-        bits[len(bits)-1] = 1
-    else:
-        i = len(bits)-1
-        # FIXME handle overflow when bits[i]=1 for all values of 'i'
-        while bits[i] == 1:
-            bits[i] = 0
-            i -= 1
-        bits[i] = 1
-
-
 def to_floating_point_binary_ieee754(decimal: float):
     """Like 'to_floating_point_binary' but implementing the IEEE-754 algorithm manually
 
