@@ -12,6 +12,40 @@ from functools import reduce
 
 mp.dps = 100
 
+def precision(decimal_repr: str):
+    """Determines how many digits of the given decimal number are significand when represented as a floating-point number
+
+    Algorithm: start checking the original decimal representation and then remove the rightmost digit recursively
+    until precision is found.
+
+    DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
+    
+    d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
+    and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
+    decimal numbers. 
+    In other words, the d-digit number will round-trip.
+    """
+    if len(decimal_repr) == 0:
+        return 0;
+    
+    # exclude radix point from the count
+    num_digits = len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)       
+    
+    # round-trip check
+    floating_point_number = float(decimal_repr)
+    exact_decimal = mpf(floating_point_number)
+    rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
+    if rounded_exact_decimal == decimal_repr:
+        return num_digits
+    
+    # next iteration
+    trimmed_decimal_repr = decimal_repr[:-1]
+    if trimmed_decimal_repr[-1] == '.':
+        # remove radix point if it is the last character of the decimal representation
+        trimmed_decimal_repr = trimmed_decimal_repr[:-1]
+    return precision(trimmed_decimal_repr)
+
+    
 
 def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
     """Check if the bit pattern corresponds to the special floating-point values 'Infinity' or 'NaN'
@@ -301,16 +335,20 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
         exact_decimal, exp = to_exact_decimal(bits)
 
 
-if __name__ == "__main__":
-    print(to_double_precision_floating_point_binary(7.2))
-    # fp_gen = fp_gen(0.00000000000012343)
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
 
-0.00000000000012343000000000003547764811160377940497012878851013084613441606052219867706298828125
-0.00000000000000000000000000002524354896707237777317531408904915934954260592348873615264892578125
+if __name__ == "__main__":
+    # print(mpf(7.1))
+    # print(to_double_precision_floating_point_binary(7.2))
+    fp_gen = fp_gen(1)
+    print(next(fp_gen))
+    print(next(fp_gen))
+    print(next(fp_gen))
+    print(next(fp_gen))
+    print(next(fp_gen))
+    print(next(fp_gen))
+    print(next(fp_gen))
+
+
 # decimal = 1.2
 # binary_val = to_floating_point_binary(decimal,False)[0]
 # exact_decimal = to_exact_decimal(binary_val)
@@ -328,4 +366,12 @@ if __name__ == "__main__":
 
 # 0.0000000000000002220446049250313
 # 0.0000000000000002220446049250313080847263336181640625
-# 0.0000000000000002220446049250313080847263336181640625
+# 0.000000000000000222044604925031308084726333618164062
+
+#7.0999999999999996447286321199499070644378662109375 7.1200000000000001 
+# 7.1000000000000005
+# 7.100000000000001
+# 7.0999999999999996447286321199499070644378662109375
+# 7.10000000000000053290705182007513940334320068359375
+# 7.10000000000000142108547152020037174224853515625
+# 7.10000000000000230926389122032560408115386962890625
