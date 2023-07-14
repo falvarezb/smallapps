@@ -94,12 +94,12 @@ def test_fp_gen_infinity():
     except OverflowError as e:
         assert e.args[0] == "Infinity"
 
-def test_precision():
+def test_double_precision():
     # 7.100000000000003
-    assert precision("7.100000000000003") == 16
-    assert precision("7.1000000000000031974423109204508364200592041015625") == 50
-    assert precision("7.1000000000000034345") == 16
+    assert double_precision("7.100000000000003") == 16
+    assert double_precision("7.1000000000000031974423109204508364200592041015625") == 50
+    assert double_precision("7.1000000000000034345") == 16
     # 7.1
-    assert precision("7.1000000000000000000000000000000000") == 16
-    assert precision("7.09999999999999968") == 17
+    assert double_precision("7.1000000000000000000000000000000000") == 16
+    assert double_precision("7.09999999999999968") == 17
         

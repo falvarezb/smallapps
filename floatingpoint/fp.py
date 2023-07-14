@@ -12,18 +12,17 @@ from functools import reduce
 
 mp.dps = 100
 
-def precision(decimal_repr: str):
-    """Determines how many digits of the given decimal number are significand when represented as a floating-point number
-
-    Algorithm: start checking the original decimal representation and then remove the rightmost digit recursively
-    until precision is found.
+def double_precision(decimal_repr: str):
+    """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
     
     d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
     and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
-    decimal numbers. 
-    In other words, the d-digit number will round-trip.
+    decimal numbers. In other words, the d-digit number will round-trip.
+
+    Algorithm: start with the original decimal representation and then remove the rightmost digit recursively
+    until finding a number that round-trips.
     """
     if len(decimal_repr) == 0:
         return 0;
@@ -32,8 +31,8 @@ def precision(decimal_repr: str):
     num_digits = len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)       
     
     # round-trip check
-    floating_point_number = float(decimal_repr)
-    exact_decimal = mpf(floating_point_number)
+    double_precision_floating_point_number = float(decimal_repr)
+    exact_decimal = mpf(double_precision_floating_point_number)
     rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
     if rounded_exact_decimal == decimal_repr:
         return num_digits
@@ -43,14 +42,13 @@ def precision(decimal_repr: str):
     if trimmed_decimal_repr[-1] == '.':
         # remove radix point if it is the last character of the decimal representation
         trimmed_decimal_repr = trimmed_decimal_repr[:-1]
-    return precision(trimmed_decimal_repr)
+    return double_precision(trimmed_decimal_repr)
 
     
 
 def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
     """Check if the bit pattern corresponds to the special floating-point values 'Infinity' or 'NaN'
-
-    If so, raise an OverflowError, else do nothing
+    If so, raise an OverflowError, else return None
     """
     # check if exponent is all ones
     if reduce(lambda x, y: bool(x) and bool(y), exponent, True):
@@ -201,27 +199,6 @@ def to_floating_point_binary_ieee754(decimal: float):
         "".join([str(i) for i in fraction_bits[:-1]]).zfill(23)
 
     return (bits, hex(int(bits, 2)))
-
-
-# def to_floating_point_decimal(binary: str) -> float:
-#     """Transforms binary to decimal
-
-#     The resulting value is not exact but the value rounded according to the IEEE_754 standard implemented by Python itself
-
-#     Args:
-#         binary (str): string representing a binary number
-
-#     Returns:
-#         float: double-precision floating-point decimal
-#     """
-#     sign = 1 if binary[0] == '0' else -1
-#     fraction = binary[9:]
-#     exp = int(binary[1:9], 2)-127
-#     mantissa = 1.0
-#     for i in range(1, len(fraction)+1):
-#         decimal_value = int(fraction[i-1])*(0.5)**i
-#         mantissa += decimal_value
-#     return sign*mantissa*2**exp
 
 
 def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
