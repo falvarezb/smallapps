@@ -12,6 +12,18 @@ from functools import reduce
 
 mp.dps = 100
 
+def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
+    """Decompose the binary representation of a double-precision floating-point number into its elements: sign, fraction, unbiased exponent
+    """
+    exponent_bits = bits[1:12]
+    biased_exp = int(list_to_str(exponent_bits), 2)
+    double_precision_exponent_bias = 1023
+    unbiased_exp = biased_exp-double_precision_exponent_bias
+    fraction_bits = bits[12:]
+    sign = 1 if bits[0] == 0 else -1
+    return [sign, fraction_bits, exponent_bits, unbiased_exp]
+
+
 def double_precision(decimal_repr: str):
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
@@ -209,19 +221,13 @@ def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
 
     Return a tuple containing the exact decimal representation and the unbiased exponent of the binary format
     """
-    exponent_bits = bits[1:12]
-    biased_exp = int(list_to_str(exponent_bits), 2)
-    fraction = bits[12:]
-    check_infinity_or_nan(fraction, exponent_bits)
+    sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
+    check_infinity_or_nan(fraction_bits, exponent_bits)
 
     half = mpf('0.5')
-    exponent_bias = 1023
-    unbiased_exp = biased_exp-exponent_bias
-    sign = 1 if bits[0] == 0 else -1
-
     mantissa = mpf(1)
-    for i in range(1, len(fraction)+1):
-        decimal_value = fraction[i-1]*half**i
+    for i in range(1, len(fraction_bits)+1):
+        decimal_value = fraction_bits[i-1]*half**i
         mantissa += decimal_value
     return (sign*mantissa*mpf(2)**unbiased_exp, unbiased_exp)
 
@@ -267,17 +273,16 @@ def next_binary_fp(bits: List[int]) -> None:
     Returns:
         list[int]: bit pattern of the next double-precision floating-point number
     """
-    fraction = bits[12:]
-    exponent = bits[1:12]
-    check_infinity_or_nan(fraction, exponent)
+    _, fraction_bits, exponent_bits, _ = unpack_double_precision_fp(bits)
+    check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    if next_binary_value(fraction):
+    if next_binary_value(fraction_bits):
         # overflow in fraction, increase exponent
-        next_binary_value(exponent)
-        check_infinity_or_nan(fraction, exponent)
+        next_binary_value(exponent_bits)
+        check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    bits[12:] = fraction
-    bits[1:12] = exponent
+    bits[12:] = fraction_bits
+    bits[1:12] = exponent_bits
 
 
 def fp_gen(seed: float) -> Tuple[float, mpf, int]:
