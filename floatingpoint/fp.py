@@ -6,9 +6,9 @@ To get around this limitation, some functions in this module make use of the mpm
 """
 
 import struct
-from typing import List, Tuple
-from mpmath import *
 from functools import reduce
+from typing import List, Tuple
+from mpmath import mp, mpf, nstr
 
 mp.dps = 100
 
@@ -49,7 +49,8 @@ def double_precision_significant_digits(decimal_repr: str):
     double_precision_floating_point_number = float(decimal_repr)
     exact_decimal = mpf(double_precision_floating_point_number)
     rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
-    if rounded_exact_decimal == decimal_repr:
+    # comparing numeric values instead of comparing strings directly as strings may differ in trailing decimal point
+    if mpf(rounded_exact_decimal) == mpf(decimal_repr):
         return num_digits
     
     # next iteration
@@ -310,14 +311,15 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
-    fp_gen = fp_gen(1)
-    print(next(fp_gen))
-    print(next(fp_gen))
-    print(next(fp_gen))
-    print(next(fp_gen))
-    print(next(fp_gen))
-    print(next(fp_gen))
-    print(next(fp_gen))
+    print(double_precision_significant_digits("72057594037927956"))
+    # fp_gen = fp_gen(1)
+    # print(next(fp_gen))
+    # print(next(fp_gen))
+    # print(next(fp_gen))
+    # print(next(fp_gen))
+    # print(next(fp_gen))
+    # print(next(fp_gen))
+    # print(next(fp_gen))
 
 
 # decimal = 1.2
@@ -332,17 +334,3 @@ if __name__ == "__main__":
 # print(f"|-------------------------------------------------------------------------------|")
 # print("\n".join([prettify(fprange(e)) for e in range(50,60)]))
 # print('\n')
-
-# print(mpf(1.20000000000000017763568394002504646778106689453125)-mpf(1.1999999999999999555910790149937383830547332763671875))
-
-# 0.0000000000000002220446049250313
-# 0.0000000000000002220446049250313080847263336181640625
-# 0.000000000000000222044604925031308084726333618164062
-
-#7.0999999999999996447286321199499070644378662109375 7.1200000000000001 
-# 7.1000000000000005
-# 7.100000000000001
-# 7.0999999999999996447286321199499070644378662109375
-# 7.10000000000000053290705182007513940334320068359375
-# 7.10000000000000142108547152020037174224853515625
-# 7.10000000000000230926389122032560408115386962890625
