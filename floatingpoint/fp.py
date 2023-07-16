@@ -38,9 +38,14 @@ def double_precision_significant_digits(decimal_repr: str):
 
     Algorithm: start with the original decimal representation and then remove the rightmost digit recursively
     until finding a number that round-trips.
+
+    Decimal representation with exponential notation is not supported
     """
     if len(decimal_repr) == 0:
         return 0;
+
+    if decimal_repr.find('e') > -1:
+        raise ValueError("exponential notation not supported")
     
     # exclude radix point from the count
     num_digits = len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)       

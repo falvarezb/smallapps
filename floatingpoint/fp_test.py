@@ -108,6 +108,13 @@ def test_double_precision_significant_digits():
     assert double_precision_significant_digits("72057594037927956.") == 16
     # 72057594037927956.323
     assert double_precision_significant_digits("72057594037927956.323") == 16
+
+    # exponential notation not supported
+    try:
+        double_precision_significant_digits("1e-10")
+        assert False
+    except ValueError as e:
+        assert e.args[0] == "exponential notation not supported"
         
 def test_round_to_nearest():
     # no actual rounding, all digits are kept
@@ -150,6 +157,4 @@ def test_round_to_nearest_bool():
     assert round_to_nearest([1,1,0,1], 3, False) == [1,1,0]
     #### If the digit at the rounding position is odd (1), round up (add 1).
     assert round_to_nearest([0,1,1,1], 3, False) == [1,0,0]
-
-
 
