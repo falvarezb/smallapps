@@ -132,3 +132,18 @@ def test_round_to_nearest():
         assert False
     except OverflowError:
         assert True
+
+
+def test_round_to_nearest_bool():
+
+    # If the digit following the rounding position is 1 and any of the following digits is 1, round up (add 1).
+    assert round_to_nearest([0,1,1,1], 3, True) == [1,0,0]
+
+    # If the digit following the rounding position is 1 and all of the following digits are 0, apply the tie-breaking rule:
+    #### If the digit at the rounding position is even (0), round down (truncate).
+    assert round_to_nearest([1,1,0,1], 3, False) == [1,1,0]
+    #### If the digit at the rounding position is odd (1), round up (add 1).
+    assert round_to_nearest([0,1,1,1], 3, False) == [1,0,0]
+
+
+

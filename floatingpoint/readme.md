@@ -1,21 +1,13 @@
 # About
 
-Implementation of the [IEEE 754]((https://en.wikipedia.org/wiki/IEEE_754-1985)) standard to convert floating-point numbers between their binary and decimal representations.
+Functions to manipulate the binary and decimal representations of floating-point numbers according to the [IEEE 754]((https://en.wikipedia.org/wiki/IEEE_754-1985)) standard.
 
 
-The implementation covers [single](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) and [double-precision](https://en.wikipedia.org/wiki/Double-precision_floating-point_format) formats.
+## Rule "round to nearest, ties to even"
 
+This rule is IEEE 754's standard method to round floating-point numbers.
 
-Python's own _float_ data type represents numbers as double-precision floating points. To get around this limitation, 
-some functions in this module make use of the [mpmath](https://mpmath.org) arbitrary-precision library.
-
-
-
-### Rule "round to nearest, ties to even"
-
-This rule is the standard method to round floating-point numbers to be represented as IEEE 754 single/double-precision binary numbers.
-
-The algorithm to apply this rule is:
+Algorithm to apply this rule to binary numbers:
 
 - If the digit following the rounding position is 0, round down (truncate).    
 - If the digit following the rounding position is 1 and all of the following digits are 0, apply the tie-breaking rule:
@@ -23,23 +15,25 @@ The algorithm to apply this rule is:
     - If the digit at the rounding position is odd (1), round up (add 1).
 - If the digit following the rounding position is 1 and any of the following digits is 1, round up (add 1).
 
-In order to understand the rule, it's helpful to keep in mind the following fact: in binary, adding 1 to the _(k+1)-th_ position is half the increment than adding 1 to the _k-th_ position (__providing that the MSB is in the first position, the leftmost one__).
+### Explanation
+In binary, adding 1 to the _(k+1)-th_ position is half the increment than adding 1 to the _k-th_ position (__counting positions from the MSB - most significant bit -__).
 
-__e.g.__ decimal value 8 in binary is _1000_; adding 1 to the 3rd position is an increment of 2^1 resulting in _1010_ (10), whereas adding 1 to the 4th position is an increment of 2^0 resulting in _1001_ (9).
+e.g. decimal value 8 in binary is _1000_; adding 1 to the 3rd position is an increment of 2^1 resulting in _1010_ (10), whereas adding 1 to the 4th position is an increment of 2^0 resulting in _1001_ (9).
 
 So when rounding a binary number to the _k-th_ position, if (_k+1)-th_ is 1 and all subsequent digits are 0, that value will lie exactly in the middle between the "round down" and "round up" values.
 On the other hand, if any of the subsequent digits is 1, then the number will be greater than the middle value and closer to the "round up" one.
 
-More formally:
+More formally, given the binary number $x$:
 
-- increment on the _k-th_ position = 2^k
-- increment on the _(k+1)-th_ position = 2^(k-1)
+- $x_k = x + 2^k$
+- $x_{k+1} = x + 2^{k-1}$
 
-Then both distances are the same:
+Then:
 
-- distance between the number and the "round down" value is: 2^(k-1)
-- distance between the number and the "round up" value is: 2^k - 2^(k-1) = 2^k (1 - 2^-1) = 2^k 2^-1 = 2^(k-1)
+- $x_{k+1} - x = (x + 2^{k-1}) - x = 2^{k-1}$
+- $x_k - x_{k+1} = (x + 2^k) - (x + 2^{k-1}) = 2^k (1 - 2^{-1}) = 2^k 2^{-1} = 2^{k-1}$
 
+provingthat $x_{k+1}$ lies in the middle between $x$ and $x_k$
 
 If the binary representation of a floating-point number has a group of digits that repeats indefinitely, it's not feasible to examine all digits to determine whether all of them are 0 or not. Instead, when calculating the binary representation, we can check if the fraction left after calculating the _(k+1)-th_ digit is 0 or not.
 
