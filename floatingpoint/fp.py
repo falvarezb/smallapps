@@ -27,7 +27,7 @@ def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: Lis
     fp[12:] = fraction
     fp[1:12] = exponent
 
-def double_precision_significant_digits(decimal_repr: str):
+def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
@@ -40,6 +40,8 @@ def double_precision_significant_digits(decimal_repr: str):
     until finding a number that round-trips.
 
     Decimal representation with exponential notation is not supported
+
+    Returns a tuple containing the number of significant digits and the significant digits themselves
     """
     if len(decimal_repr) == 0:
         return 0;
@@ -56,7 +58,7 @@ def double_precision_significant_digits(decimal_repr: str):
     rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
     # comparing numeric values instead of comparing strings directly as strings may differ in trailing decimal point
     if mpf(rounded_exact_decimal) == mpf(decimal_repr):
-        return num_digits
+        return (num_digits, rounded_exact_decimal)
     
     # next iteration
     trimmed_decimal_repr = decimal_repr[:-1]

@@ -96,18 +96,20 @@ def test_fp_gen_infinity():
 
 def test_double_precision_significant_digits():
     # 7.100000000000003
-    assert double_precision_significant_digits("7.100000000000003") == 16
-    assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == 50
-    assert double_precision_significant_digits("7.1000000000000034345") == 16
+    assert double_precision_significant_digits("7.100000000000003") == (16, "7.100000000000003")
+    assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == (50, "7.1000000000000031974423109204508364200592041015625")
+    assert double_precision_significant_digits("7.1000000000000034345") == (16, "7.100000000000003")
     # 7.1
-    assert double_precision_significant_digits("7.1000000000000000000000000000000000") == 16
-    assert double_precision_significant_digits("7.09999999999999968") == 17
+    assert double_precision_significant_digits("7.1000000000000000000000000000000000") == (16, "7.100000000000000") 
+    assert double_precision_significant_digits("7.09999999999999968") == (17, "7.0999999999999996")
     # 72057594037927956
-    assert double_precision_significant_digits("72057594037927956") == 16
+    assert double_precision_significant_digits("72057594037927956") == (16, "7205759403792795.")
     # 72057594037927956.
-    assert double_precision_significant_digits("72057594037927956.") == 16
+    assert double_precision_significant_digits("72057594037927956.") == (16, "7205759403792795.")
     # 72057594037927956.323
-    assert double_precision_significant_digits("72057594037927956.323") == 16
+    assert double_precision_significant_digits("72057594037927956.323") == (16, "7205759403792795.")
+    # 1023.999999999999886
+    assert double_precision_significant_digits("1023.999999999999887") == (17, "1023.9999999999999")
 
     # exponential notation not supported
     try:
