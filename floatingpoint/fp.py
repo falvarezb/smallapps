@@ -245,18 +245,27 @@ def esegment_params(e: int, p: int = 52) -> Tuple[int, str, str, str]:
     return (e, nstr(min_val, prec), nstr(max_val, prec), nstr(distance, prec))
 
 
-def tabulate_esegments(min_e: int, max_e: int):
-    """Pretty-print parameters of the segments corresponding to the given range [min_e, max_e-1]
+def tabulate_esegments(start: int, end: int):
+    """Pretty-print parameters of the segments corresponding to the given range [start, end-1]
     """
-    def prettify(r):
-        return f"|{r[0]:5}  |  {r[1]:25}  |  {r[2]:27} | {r[3]:9}|"
+    segments = [esegment_params(e) for e in range(start,end)]
+    max_e = 5
+    max_min = max([len(segment[1]) for segment in segments])
+    max_max = max([len(segment[2]) for segment in segments])
+    max_distance = max([len(segment[3]) for segment in segments])
+
+    header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-8}}|"
+    row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 7)}|"
+
+    def prettify(r):        
+        return f"| {r[0]:^{max_e}}| {r[1]:{max_min}}| {r[2]:{max_max}}| {r[3]:{max_distance}}|"
+
 
     print('\n')
-    print(f"| e     |    min                      |   max                        | distance |")
-    print(f"|-------------------------------------------------------------------------------|")
-    print("\n".join([prettify(esegment_params(e)) for e in range(50,60)]))
+    print(header)
+    print(row_separator)
+    print("\n".join([prettify(segment) for segment in segments]))
     print('\n')
-
 
 def next_binary_value(bits) -> bool:
     """Add 1 to the given bit pattern 'bits', assuming bits[0] is the MSB (most-significant bit)
@@ -335,7 +344,7 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
-    # print(double_precision_significant_digits("72057594037927956"))
+    print(double_precision_significant_digits("1023.999999999999887"))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))
@@ -353,4 +362,4 @@ if __name__ == "__main__":
 # print(binary_val)
 # print(exact_decimal)
 
-    tabulate_esegments(50,60)
+    tabulate_esegments(-10,11)
