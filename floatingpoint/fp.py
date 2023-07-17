@@ -228,15 +228,34 @@ def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
     return (sign*mantissa*mpf(2)**unbiased_exp, unbiased_exp)
 
 
-def fprange(e, p=52):
-    (min, max) = [float(2**e), 2**e*(2**(p+1)-1)/2**p]
+def esegment_params(e: int, p: int = 52) -> Tuple[int, str, str, str]:
+    """Calculate parameters of the floating-point segment corresponding to the value of 'e'
+
+    Return tuple with the values: 
+    - echo of e
+    - exact decimal of the minimum fp in the segment
+    - exact decimal of the maximum fp in the segment
+    - distance between consecutive fp in the segment
+    """
+    two = mpf(2)
+    (min_val, max_val) = [two**e, two**e*(two**(p+1)-1)/two**p]
     # distance = (max-min)/(2**p-1)
-    distance = 2**(e-p)
-    return (e, min, max, distance)
+    distance = two**(e-p)
+    prec = 200
+    return (e, nstr(min_val, prec), nstr(max_val, prec), nstr(distance, prec))
 
 
-def prettify(r):
-    return f"|{r[0]: < 5}  |  {r[1]: < 25}  |  {r[2]: <27} | {r[3]: <9}|"
+def tabulate_esegments(min_e: int, max_e: int):
+    """Pretty-print parameters of the segments corresponding to the given range [min_e, max_e-1]
+    """
+    def prettify(r):
+        return f"|{r[0]:5}  |  {r[1]:25}  |  {r[2]:27} | {r[3]:9}|"
+
+    print('\n')
+    print(f"| e     |    min                      |   max                        | distance |")
+    print(f"|-------------------------------------------------------------------------------|")
+    print("\n".join([prettify(esegment_params(e)) for e in range(50,60)]))
+    print('\n')
 
 
 def next_binary_value(bits) -> bool:
@@ -316,7 +335,7 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
-    print(double_precision_significant_digits("72057594037927956"))
+    # print(double_precision_significant_digits("72057594037927956"))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))
@@ -334,8 +353,4 @@ if __name__ == "__main__":
 # print(binary_val)
 # print(exact_decimal)
 
-# print('\n')
-# print(f"| e     |    min                      |   max                        | distance |")
-# print(f"|-------------------------------------------------------------------------------|")
-# print("\n".join([prettify(fprange(e)) for e in range(50,60)]))
-# print('\n')
+    tabulate_esegments(50,60)
