@@ -67,6 +67,39 @@ b: scala.math.BigDecimal = 0.3333333333333333333333333333333333                 
 
 https://docs.python.org/3/library/string.html#formatspec
 
+
+### Definition of precision
+
+- exact decimal
+1023.9999999999998863131622783839702606201171875
+
+- subset of exact decimal
+1023.999999999999886 (same fp and first 'n' digits are the same, but what
+happens if it does not round-trip?)
+i.e. 0.1000000000000000054 is subset but does not round-trips
+
+Java/Python both behave like the 'non-subset'
+1023.999999999999886 -> 1023.9999999999999
+0.1000000000000000054 -> 0.1
+
+- non-subset of exact decimal
+1023.999999999999887 (find shortest decimal repr of fp that round-trips)
+
+1023.999999999999 887 -> 1023.999999999999 9
+so 887 is replaced by 9, so none of the original digits was valid
+
+According to DEFINITION OF PRECISION, we have 17-digit precision
+
+however, only the 16 first digits -1023.999999999999- stay in the final solution
+
+alg: 
+- given a d-digit decimal representation, calculate fp
+- remove least significant digit and find a (d-1)-digit representative of fp that round-trips
+- if found, continue recursively by repeating the previous step until no more representatives found
+- select shortest found representative
+
+is it possible to end up with more than one candidate to choose from?
+
 1023.999999999999 8863131622783839702606201171875
 1023.999999999999 89
    0.000000000000 1136868377216160297393798828125
@@ -81,4 +114,11 @@ https://docs.python.org/3/library/string.html#formatspec
 0.0000000000001136868377216160297393798828125
 
 0.00010129999999999999573362108318264063200331293046474456787109375
-7.2057594037927956
+72057594037927956
+0.1000000000000000055511151231257827021181583404541015625
+
+100000000000000001
+7205759403792795
+1023.9999999999999
+999999999999887
+000000000000227373675443232059478759765625

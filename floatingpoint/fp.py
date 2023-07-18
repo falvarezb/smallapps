@@ -31,11 +31,25 @@ def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: Lis
 def double_precision_significant_digits(decimal_repr: str, original_exact_decimal = None) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
+    If the given decimal dx representation corresponds to the binary floating-point number 'fp' and there are 'n' decimal representations
+    d1, d2 ... dn corresponding to that 'fp', were dx is one of d1, d2 ... dn, then we take the di with the least digits.
+    If there are several candidates with the least digits, then we take the one that round-trips according to the below definition
+    of precision.
+
+    The only exception to this rule is the exact decimal representation of a floating-point number, that is not trimmed. 
+    However, subsets of the exact decimal representation are trimmed
+
+
     DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
     
     d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
     and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
     decimal numbers. In other words, the d-digit number will round-trip.
+
+    ANOTHER DEFINITION (https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/)
+
+    For most of our purposes when we say that a format has n-digit precision we mean that over some range, typically [10^k, 10^(k+1)), 
+    where k is an integer, all n-digit numbers can be uniquely identified.
 
     Algorithm: start with the original decimal representation and then remove the rightmost digit recursively
     until finding a number that round-trips.
@@ -73,9 +87,8 @@ def double_precision_significant_digits(decimal_repr: str, original_exact_decima
             trimmed_decimal_repr = trimmed_decimal_repr[:-1]
         return double_precision_significant_digits(trimmed_decimal_repr, original_exact_decimal)
     else:
-        # restore digit as it is significant and find correct value
-        # range(1,10) as 0 equates to removing digit
-        for i in range(1,10):
+        # restore digit as it is significant and find correct value        
+        for i in range(0,10):
             temptative_value = decimal_repr[:-1] + str(i)
             rounded_exact_decimal = nstr(mpf(float(temptative_value)), num_digits, strip_zeros=False)
             if mpf(rounded_exact_decimal) == mpf(temptative_value):
@@ -367,11 +380,29 @@ def identify_range(x: float) -> List[Tuple[int, int]]:
     next_power_of_10 = previous_power_of_10 + 1
     return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key= lambda x: x[0]**x[1])
 
+def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:    
+    current_mpf = start
+    current_exact_decimal = mpf(float(current_mpf))
+
+    while(current_mpf < end):
+        previous_mpf = current_mpf
+        previous_exact_decimal = current_exact_decimal
+        current_mpf = current_mpf + precision
+        current_exact_decimal = mpf(float(current_mpf))
+        if previous_exact_decimal == current_exact_decimal:
+            return False  
+        print(current_mpf/end)      
+    return True
+    
+
+
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
-    print(double_precision_significant_digits("1023.999999999999887"))
-    print(identify_range(72057594037927956))
+    # print(double_precision_significant_digits("7205759403792795"))
+    # print(identify_range(1023.999999999999887))
+    print(esegment_params(10))
+    print(explore_segment_precision(mpf(2)**10, mpf(2)**11, mpf(1e-12)))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))
@@ -389,4 +420,4 @@ if __name__ == "__main__":
 # print(binary_val)
 # print(exact_decimal)
 
-    tabulate_esegments(-10,11)
+    # tabulate_esegments(-10,11)
