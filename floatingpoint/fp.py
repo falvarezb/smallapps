@@ -6,6 +6,7 @@ To get around this limitation, some functions in this module make use of the mpm
 """
 
 import struct
+from math import log2, log10, floor
 from functools import reduce
 from typing import List, Tuple
 from mpmath import mp, mpf, nstr
@@ -27,7 +28,7 @@ def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: Lis
     fp[12:] = fraction
     fp[1:12] = exponent
 
-def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
+def double_precision_significant_digits(decimal_repr: str, original_exact_decimal = None) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
@@ -55,17 +56,30 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     # round-trip check
     double_precision_floating_point_number = float(decimal_repr)
     exact_decimal = mpf(double_precision_floating_point_number)
+    original_exact_decimal = original_exact_decimal if original_exact_decimal is not None else mpf(double_precision_floating_point_number)
     rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
     # comparing numeric values instead of comparing strings directly as strings may differ in trailing decimal point
     if mpf(rounded_exact_decimal) == mpf(decimal_repr):
         return (num_digits, rounded_exact_decimal)
     
     # next iteration
+
+    # trim non-significant digit
     trimmed_decimal_repr = decimal_repr[:-1]
-    if trimmed_decimal_repr[-1] == '.':
-        # remove radix point if it is the last character of the decimal representation
-        trimmed_decimal_repr = trimmed_decimal_repr[:-1]
-    return double_precision_significant_digits(trimmed_decimal_repr)
+    # is still same floating-point number
+    if mpf(float(trimmed_decimal_repr)) == exact_decimal:
+        if trimmed_decimal_repr[-1] == '.':
+            # remove radix point if it is the last character of the decimal representation
+            trimmed_decimal_repr = trimmed_decimal_repr[:-1]
+        return double_precision_significant_digits(trimmed_decimal_repr, original_exact_decimal)
+    else:
+        # restore digit as it is significant and find correct value
+        # range(1,10) as 0 equates to removing digit
+        for i in range(1,10):
+            temptative_value = decimal_repr[:-1] + str(i)
+            rounded_exact_decimal = nstr(mpf(float(temptative_value)), num_digits, strip_zeros=False)
+            if mpf(rounded_exact_decimal) == mpf(temptative_value):
+                return (len(temptative_value)-1 if decimal_repr.find('.') > -1 else len(temptative_value), rounded_exact_decimal)
 
     
 
@@ -342,11 +356,22 @@ def fp_gen(seed: float) -> Tuple[float, mpf, int]:
         exact_decimal, exp = to_exact_decimal(bits)
 
 
+def identify_range(x: float) -> List[Tuple[int, int]]:
+    """Given a float, calculate the nearest powers of 10 and 2 and return them in ascending order
+
+    72057594037927956 -> [(10, 16), (2, 56), (10, 17), (2, 57)] that reads: 10^16 < 2^56 < 72057594037927956 < 10^17 < 2^57
+    """
+    previous_power_of_2 = floor(log2(x))
+    previous_power_of_10 = floor(log10(x))
+    next_power_of_2 = previous_power_of_2 + 1
+    next_power_of_10 = previous_power_of_10 + 1
+    return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key= lambda x: x[0]**x[1])
 
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
     print(double_precision_significant_digits("1023.999999999999887"))
+    print(identify_range(72057594037927956))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))

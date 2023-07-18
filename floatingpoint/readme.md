@@ -37,8 +37,7 @@ provingthat $x_{k+1}$ lies in the middle between $x$ and $x_k$
 
 If the binary representation of a floating-point number has a group of digits that repeats indefinitely, it's not feasible to examine all digits to determine whether all of them are 0 or not. Instead, when calculating the binary representation, we can check if the fraction left after calculating the _(k+1)-th_ digit is 0 or not.
 
-1/3 = 0.3333333333
-arbitrary precision
+
 
 ### BigDecimal
 
@@ -66,6 +65,20 @@ b: scala.math.BigDecimal = 0.3333333333333333333333333333333333                 
 - [exploringbinary](https://www.exploringbinary.com/floating-point-converter/)
 
 
-0000000000000000000000000000000000000000000000000000
-1111111111111111111111111111111111111111111111111111
-1.9999999999999998
+https://docs.python.org/3/library/string.html#formatspec
+
+1023.999999999999 8863131622783839702606201171875
+1023.999999999999 89
+   0.000000000000 1136868377216160297393798828125
+
+1023.9999999999999
+1023.9999999999999
+1023.9999999999999
+1023.9999999999998863131622783839702606201171875
+
+
+0.0000000000001136868377216160297393798828125
+0.0000000000001136868377216160297393798828125
+
+0.00010129999999999999573362108318264063200331293046474456787109375
+7.2057594037927956
