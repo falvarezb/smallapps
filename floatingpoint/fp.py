@@ -28,7 +28,7 @@ def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: Lis
     fp[12:] = fraction
     fp[1:12] = exponent
 
-def double_precision_significant_digits(decimal_repr: str, original_exact_decimal = None) -> Tuple[int, str]:
+def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     If the given decimal dx representation corresponds to the binary floating-point number 'fp' and there are 'n' decimal representations
@@ -58,43 +58,79 @@ def double_precision_significant_digits(decimal_repr: str, original_exact_decima
 
     Returns a tuple containing the number of significant digits and the significant digits themselves
     """
+
+    def trim_radix_point(s: str):
+        if s[-1] == '.':
+            return s.replace('.','')
+        return s
+
+    def compute_num_digits(decimal_repr: str) -> int:
+        # exclude radix point from the count
+        return len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)
+
+    def compute_exact_decimal(decimal_repr: str) -> mpf:
+        double_precision_floating_point_number = float(decimal_repr)
+        return mpf(double_precision_floating_point_number)
+
+    def is_round_trip(decimal_repr: str) -> bool:      
+        num_digits = compute_num_digits(decimal_repr)
+        exact_decimal = compute_exact_decimal(decimal_repr)
+        rounded_exact_decimal = trim_radix_point(nstr(exact_decimal, num_digits, strip_zeros=False))        
+        return rounded_exact_decimal == decimal_repr    
+
+    def is_representative(floating_point_number: mpf, candidate: str):
+        # check if candidate is a representative of the floating-point number mpf    
+        return floating_point_number == compute_exact_decimal(candidate)
+
     if len(decimal_repr) == 0:
         return 0;
 
     if decimal_repr.find('e') > -1:
         raise ValueError("exponential notation not supported")
+        
+    representatives_found = []
+    original_exact_decimal = compute_exact_decimal(decimal_repr)
     
-    # exclude radix point from the count
-    num_digits = len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)       
-    
-    # round-trip check
-    double_precision_floating_point_number = float(decimal_repr)
-    exact_decimal = mpf(double_precision_floating_point_number)
-    original_exact_decimal = original_exact_decimal if original_exact_decimal is not None else mpf(double_precision_floating_point_number)
-    rounded_exact_decimal = nstr(exact_decimal, num_digits, strip_zeros=False)
-    # comparing numeric values instead of comparing strings directly as strings may differ in trailing decimal point
-    if mpf(rounded_exact_decimal) == mpf(decimal_repr):
-        return (num_digits, rounded_exact_decimal)
-    
-    # next iteration
-
-    # trim non-significant digit
-    trimmed_decimal_repr = decimal_repr[:-1]
-    # is still same floating-point number
-    if mpf(float(trimmed_decimal_repr)) == exact_decimal:
+    # find shortest representative
+    representative = True
+    while representative: 
+        representatives_found.append(decimal_repr) 
+        trimmed_decimal_repr = decimal_repr[:-1]
         if trimmed_decimal_repr[-1] == '.':
             # remove radix point if it is the last character of the decimal representation
             trimmed_decimal_repr = trimmed_decimal_repr[:-1]
-        return double_precision_significant_digits(trimmed_decimal_repr, original_exact_decimal)
-    else:
-        # restore digit as it is significant and find correct value        
+
+        # remove least significant digit and check if the result is still a representative
+        decimal_repr = trimmed_decimal_repr
+        representative = is_representative(original_exact_decimal, decimal_repr)      
+        if not representative:
+            # if the trimmed value is not a representative, check the neighbours (same order of magnitude values)            
+            for i in range(0,10):
+                neighbour = decimal_repr[:-1] + str(i)
+                representative = is_representative(original_exact_decimal, neighbour)
+                if representative:
+                    decimal_repr = neighbour
+                    break
+
+    # re-examine found representatives in reverse order to check if they round-trip
+    for r in reversed(representatives_found):
+        if is_round_trip(r):
+            return (compute_num_digits(r), r)
+        
+        # if it does not round-trip, check neighbours
         for i in range(0,10):
-            temptative_value = decimal_repr[:-1] + str(i)
-            rounded_exact_decimal = nstr(mpf(float(temptative_value)), num_digits, strip_zeros=False)
-            if mpf(rounded_exact_decimal) == mpf(temptative_value):
-                return (len(temptative_value)-1 if decimal_repr.find('.') > -1 else len(temptative_value), rounded_exact_decimal)
+            neighbour = r[:-1] + str(i)
+            if is_representative(original_exact_decimal, neighbour) and is_round_trip(neighbour):                
+                return (compute_num_digits(neighbour), neighbour)
+            
+    return None
+            
+        
+    
+        
 
     
+
 
 def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
     """Check if the bit pattern corresponds to the special floating-point values 'Infinity' or 'NaN'
