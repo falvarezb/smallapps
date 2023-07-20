@@ -31,39 +31,23 @@ def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: Lis
 def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
-    If the given decimal dx representation corresponds to the binary floating-point number 'fp' and there are 'n' decimal representations
-    d1, d2 ... dn corresponding to that 'fp', were dx is one of d1, d2 ... dn, then we take the di with the least digits.
-    If there are several candidates with the least digits, then we take the one that round-trips according to the below definition
-    of precision.
-
-    The only exception to this rule is the exact decimal representation of a floating-point number, that is not trimmed. 
-    However, subsets of the exact decimal representation are trimmed
-
-
-    DEFINITION OF PRECISION (based on https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/): 
+    According to https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/: 
     
-    d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
+    "d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
     and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
-    decimal numbers. In other words, the d-digit number will round-trip.
+    decimal numbers. In other words, the d-digit number will round-trip."
 
-    ANOTHER DEFINITION (https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/)
+    Return a tuple containing the shortest decimal representation that round-trips (this is basically the value returned by the function 'float()')
+    and the number of significant digits
 
-    For most of our purposes when we say that a format has n-digit precision we mean that over some range, typically [10^k, 10^(k+1)), 
-    where k is an integer, all n-digit numbers can be uniquely identified.
-
-    Algorithm: start with the original decimal representation and then remove the rightmost digit recursively
-    until finding a number that round-trips.
-
-    Decimal representation with exponential notation is not supported
-
-    Returns a tuple containing the number of significant digits and the significant digits themselves
-
-    Values returned by this function are similar to the values returned by float
+    "7.1000000000000034345" --> (16, "7.100000000000003")
     """
 
     def trim_radix_point(s: str):
+        """Remove radix point if it is the last character of the decimal representation
+        """
         if s[-1] == '.':
-            return s.replace('.','')
+            return s[:-1]
         return s
 
     def compute_num_digits(decimal_repr: str) -> int:
@@ -84,11 +68,9 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
         # check if candidate is a representative of the floating-point number mpf    
         return floating_point_number == compute_exact_decimal(candidate)
 
-    if len(decimal_repr) == 0:
-        return 0;
+    assert len(decimal_repr) > 0, "argument must not be empty"
+    assert decimal_repr.find('e') == -1, "exponential notation not supported"   
 
-    if decimal_repr.find('e') > -1:
-        raise ValueError("exponential notation not supported")
         
     representatives_found = []
     original_exact_decimal = compute_exact_decimal(decimal_repr)
@@ -98,15 +80,13 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     while representative: 
         representatives_found.append(decimal_repr) 
         trimmed_decimal_repr = decimal_repr[:-1]
-        if trimmed_decimal_repr[-1] == '.':
-            # remove radix point if it is the last character of the decimal representation
-            trimmed_decimal_repr = trimmed_decimal_repr[:-1]
+        trimmed_decimal_repr = trim_radix_point(trimmed_decimal_repr)
 
         # remove least significant digit and check if the result is still a representative
         decimal_repr = trimmed_decimal_repr
         representative = is_representative(original_exact_decimal, decimal_repr)      
         if not representative:
-            # if the trimmed value is not a representative, check the neighbours (same order of magnitude values)            
+            # check if any of the neighbours (same order of magnitude values) is a representative
             for i in range(0,10):
                 neighbour = decimal_repr[:-1] + str(i)
                 representative = is_representative(original_exact_decimal, neighbour)
@@ -119,7 +99,7 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
         if is_round_trip(r):
             return (compute_num_digits(r), r)
         
-        # if it does not round-trip, check neighbours
+        # if it does not round-trip, check if any of the neighbours does
         for i in range(0,10):
             neighbour = r[:-1] + str(i)
             if is_representative(original_exact_decimal, neighbour) and is_round_trip(neighbour):                

@@ -103,21 +103,11 @@ def test_double_precision_significant_digits():
     assert double_precision_significant_digits("7.1000000000000000000000000000000000") == (2, "7.1") 
     assert double_precision_significant_digits("7.09999999999999968") == (17, "7.0999999999999996")
     # 72057594037927956
-    assert double_precision_significant_digits("72057594037927956") == (17, "72057594037927952")
-    # 72057594037927956.
-    # assert double_precision_significant_digits("72057594037927956.") == (16, "7205759403792795.")
-    assert double_precision_significant_digits("72057594037927956.") == (17, "72057594037927952")
-    # 72057594037927956.323
+    assert double_precision_significant_digits("72057594037927956") == (17, "72057594037927952")    
+    assert double_precision_significant_digits("72057594037927956.") == (17, "72057594037927952")    
     assert double_precision_significant_digits("72057594037927956.323") == (17, "72057594037927952")
-    # 1023.999999999999887 -> does not match float?
+    # 1023.999999999999887
     assert double_precision_significant_digits("1023.999999999999887") == (17, "1023.9999999999999")
-
-    # exponential notation not supported
-    try:
-        double_precision_significant_digits("1e-10")
-        assert False
-    except ValueError as e:
-        assert e.args[0] == "exponential notation not supported"
         
 def test_round_to_nearest():
     # no actual rounding, all digits are kept
