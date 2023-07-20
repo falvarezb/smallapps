@@ -57,6 +57,8 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     Decimal representation with exponential notation is not supported
 
     Returns a tuple containing the number of significant digits and the significant digits themselves
+
+    Values returned by this function are similar to the values returned by float
     """
 
     def trim_radix_point(s: str):
@@ -437,8 +439,8 @@ if __name__ == "__main__":
     # print(to_double_precision_floating_point_binary(7.2))
     # print(double_precision_significant_digits("7205759403792795"))
     # print(identify_range(1023.999999999999887))
-    print(esegment_params(10))
-    print(explore_segment_precision(mpf(2)**10, mpf(2)**11, mpf(1e-12)))
+    # print(esegment_params(9))
+    print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-12)))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))

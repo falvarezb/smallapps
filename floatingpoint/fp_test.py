@@ -97,7 +97,7 @@ def test_fp_gen_infinity():
 def test_double_precision_significant_digits():
     # 7.100000000000003
     assert double_precision_significant_digits("7.100000000000003") == (16, "7.100000000000003")
-    # assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == (50, "7.1000000000000031974423109204508364200592041015625")
+    assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == (16, "7.100000000000003")
     assert double_precision_significant_digits("7.1000000000000034345") == (16, "7.100000000000003")
     # 7.1
     assert double_precision_significant_digits("7.1000000000000000000000000000000000") == (2, "7.1") 
