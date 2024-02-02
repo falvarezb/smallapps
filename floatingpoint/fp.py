@@ -8,10 +8,11 @@ To get around this limitation, some functions in this module make use of the mpm
 import struct
 from math import log2, log10, floor
 from functools import reduce
-from typing import List, Tuple
+from typing import List, Tuple, Generator
 from mpmath import mp, mpf, nstr
 
 mp.dps = 100
+
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
     """Decompose the binary representation of a double-precision floating-point number into its elements: sign, fraction bits, exponent bits, unbiased exponent
@@ -19,20 +20,22 @@ def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[in
     exponent_bits = bits[1:12]
     biased_exp = int(list_to_str(exponent_bits), 2)
     double_precision_exponent_bias = 1023
-    unbiased_exp = biased_exp-double_precision_exponent_bias
+    unbiased_exp = biased_exp - double_precision_exponent_bias
     fraction_bits = bits[12:]
     sign = 1 if bits[0] == 0 else -1
-    return [sign, fraction_bits, exponent_bits, unbiased_exp]
+    return (sign, fraction_bits, exponent_bits, unbiased_exp)
+
 
 def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: List[int]):
     fp[12:] = fraction
     fp[1:12] = exponent
 
+
 def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
 
     According to https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/: 
-    
+
     "d-digit precision means that if we take a d-digit decimal number, convert it to b-bit floating-point, 
     and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
     decimal numbers. In other words, the d-digit number will round-trip."
@@ -43,7 +46,7 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     "7.1000000000000034345" --> (16, "7.100000000000003")
     """
 
-    def trim_radix_point(s: str):
+    def trim_radix_point(s: str) -> str:
         """Remove radix point if it is the last character of the decimal representation
         """
         if s[-1] == '.':
@@ -52,42 +55,41 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
 
     def compute_num_digits(decimal_repr: str) -> int:
         # exclude radix point from the count
-        return len(decimal_repr)-1 if decimal_repr.find('.') > -1 else len(decimal_repr)
+        return len(decimal_repr) - 1 if decimal_repr.find('.') > -1 else len(decimal_repr)
 
     def compute_exact_decimal(decimal_repr: str) -> mpf:
         double_precision_floating_point_number = float(decimal_repr)
         return mpf(double_precision_floating_point_number)
 
-    def is_round_trip(decimal_repr: str) -> bool:      
+    def is_round_trip(decimal_repr: str) -> bool:
         num_digits = compute_num_digits(decimal_repr)
         exact_decimal = compute_exact_decimal(decimal_repr)
-        rounded_exact_decimal = trim_radix_point(nstr(exact_decimal, num_digits, strip_zeros=False))        
-        return rounded_exact_decimal == decimal_repr    
+        rounded_exact_decimal = trim_radix_point(nstr(exact_decimal, num_digits, strip_zeros=False))
+        return rounded_exact_decimal == decimal_repr
 
     def is_representative(floating_point_number: mpf, candidate: str):
-        # check if candidate is a representative of the floating-point number mpf    
+        # check if candidate is a representative of the floating-point number mpf
         return floating_point_number == compute_exact_decimal(candidate)
 
     assert len(decimal_repr) > 0, "argument must not be empty"
-    assert decimal_repr.find('e') == -1, "exponential notation not supported"   
+    assert decimal_repr.find('e') == -1, "exponential notation not supported"
 
-        
     representatives_found = []
     original_exact_decimal = compute_exact_decimal(decimal_repr)
-    
+
     # find shortest representative
     representative = True
-    while representative: 
-        representatives_found.append(decimal_repr) 
+    while representative:
+        representatives_found.append(decimal_repr)
         trimmed_decimal_repr = decimal_repr[:-1]
         trimmed_decimal_repr = trim_radix_point(trimmed_decimal_repr)
 
         # remove least significant digit and check if the result is still a representative
         decimal_repr = trimmed_decimal_repr
-        representative = is_representative(original_exact_decimal, decimal_repr)      
+        representative = is_representative(original_exact_decimal, decimal_repr)
         if not representative:
             # check if any of the neighbours (same order of magnitude values) is a representative
-            for i in range(0,10):
+            for i in range(0, 10):
                 neighbour = decimal_repr[:-1] + str(i)
                 representative = is_representative(original_exact_decimal, neighbour)
                 if representative:
@@ -98,20 +100,14 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     for r in reversed(representatives_found):
         if is_round_trip(r):
             return (compute_num_digits(r), r)
-        
-        # if it does not round-trip, check if any of the neighbours does
-        for i in range(0,10):
-            neighbour = r[:-1] + str(i)
-            if is_representative(original_exact_decimal, neighbour) and is_round_trip(neighbour):                
-                return (compute_num_digits(neighbour), neighbour)
-            
-    return None
-            
-        
-    
-        
 
-    
+        # if it does not round-trip, check if any of the neighbours does
+        for i in range(0, 10):
+            neighbour = r[:-1] + str(i)
+            if is_representative(original_exact_decimal, neighbour) and is_round_trip(neighbour):
+                return (compute_num_digits(neighbour), neighbour)
+
+    return None
 
 
 def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
@@ -180,7 +176,7 @@ def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool =
             # round down
             return bits[:kth]
         else:
-            is_any_following_digit_1 = len(list(filter(lambda x: x == 1, bits[kth+1:]))) != 0 if is_any_following_digit_1 is None else is_any_following_digit_1
+            is_any_following_digit_1 = len(list(filter(lambda x: x == 1, bits[kth + 1:]))) != 0 if is_any_following_digit_1 is None else is_any_following_digit_1
             if is_any_following_digit_1:
                 # round up
                 bits = bits[:kth]
@@ -189,7 +185,7 @@ def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool =
                 return bits
             else:
                 # same distance, ties to even: round to the nearest even number (the one ending in 0)
-                if bits[kth-1] == 1:  # odd
+                if bits[kth - 1] == 1:  # odd
                     bits = bits[:kth]
                     if next_binary_value(bits):
                         raise OverflowError()
@@ -197,8 +193,9 @@ def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool =
                 else:
                     # even
                     return bits[:kth]
-        
+
     return bits
+
 
 def to_floating_point_binary_ieee754(decimal: float):
     """Like 'to_floating_point_binary' but implementing the IEEE-754 algorithm manually
@@ -269,14 +266,14 @@ def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
 
     half = mpf('0.5')
     mantissa = mpf(1)
-    for i in range(1, len(fraction_bits)+1):
-        decimal_value = fraction_bits[i-1]*half**i
-        mantissa += decimal_value
-    return (sign*mantissa*mpf(2)**unbiased_exp, unbiased_exp)
+    for i in range(1, len(fraction_bits) + 1):
+        place_value = fraction_bits[i - 1] * half**i
+        mantissa += place_value
+    return (sign * mantissa * mpf(2)**unbiased_exp, unbiased_exp)
 
 
-def esegment_params(e: int, p: int = 52) -> Tuple[int, str, str, str]:
-    """Calculate parameters of the floating-point segment corresponding to the value of 'e'
+def esegment_params(e: int) -> Tuple[int, str, str, str]:
+    """Calculate parameters of the double-precision floating-point segment corresponding to the value of 'e'
 
     Return tuple with the values: 
     - echo of e
@@ -284,10 +281,11 @@ def esegment_params(e: int, p: int = 52) -> Tuple[int, str, str, str]:
     - exact decimal of the maximum fp in the segment
     - distance between consecutive fp in the segment
     """
+    p = 52
     two = mpf(2)
-    (min_val, max_val) = [two**e, two**e*(two**(p+1)-1)/two**p]
+    (min_val, max_val) = [two**e, two**e * (two**(p + 1) - 1) / two**p]
     # distance = (max-min)/(2**p-1)
-    distance = two**(e-p)
+    distance = two**(e - p)
     prec = 200
     return (e, nstr(min_val, prec), nstr(max_val, prec), nstr(distance, prec))
 
@@ -295,7 +293,7 @@ def esegment_params(e: int, p: int = 52) -> Tuple[int, str, str, str]:
 def tabulate_esegments(start: int, end: int):
     """Pretty-print parameters of the segments corresponding to the given range [start, end-1]
     """
-    segments = [esegment_params(e) for e in range(start,end)]
+    segments = [esegment_params(e) for e in range(start, end)]
     max_e = 5
     max_min = max([len(segment[1]) for segment in segments])
     max_max = max([len(segment[2]) for segment in segments])
@@ -304,9 +302,8 @@ def tabulate_esegments(start: int, end: int):
     header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-8}}|"
     row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 7)}|"
 
-    def prettify(r):        
+    def prettify(r):
         return f"| {r[0]:^{max_e}}| {r[1]:{max_min}}| {r[2]:{max_max}}| {r[3]:{max_distance}}|"
-
 
     print('\n')
     print(header)
@@ -314,13 +311,14 @@ def tabulate_esegments(start: int, end: int):
     print("\n".join([prettify(segment) for segment in segments]))
     print('\n')
 
+
 def next_binary_value(bits) -> bool:
     """Add 1 to the given bit pattern 'bits', assuming bits[0] is the MSB (most-significant bit)
 
     The argument is modified in place.
     Returns a boolean to indicate whether there has been overflow (True) or not (False)
     """
-    i = len(bits)-1
+    i = len(bits) - 1
     while i >= 0 and bits[i] == 1:
         bits[i] = 0
         i -= 1
@@ -352,10 +350,10 @@ def next_binary_fp(bits: List[int]) -> None:
         next_binary_value(exponent_bits)
         check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    update_double_precision_fp(bits, fraction_bits, exponent_bits)    
+    update_double_precision_fp(bits, fraction_bits, exponent_bits)
 
 
-def fp_gen(seed: float) -> Tuple[float, mpf, int]:
+def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
     The floating-point numbers generated are represented by its exact decimal representation (there is a one-to-one correspondence between
@@ -396,31 +394,30 @@ def identify_range(x: float) -> List[Tuple[int, int]]:
     previous_power_of_10 = floor(log10(x))
     next_power_of_2 = previous_power_of_2 + 1
     next_power_of_10 = previous_power_of_10 + 1
-    return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key= lambda x: x[0]**x[1])
+    return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key=lambda x: x[0]**x[1])
 
-def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:    
+
+def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
     current_mpf = start
     current_exact_decimal = mpf(float(current_mpf))
 
-    while(current_mpf < end):
-        previous_mpf = current_mpf
+    while current_mpf < end:        
         previous_exact_decimal = current_exact_decimal
         current_mpf = current_mpf + precision
         current_exact_decimal = mpf(float(current_mpf))
         if previous_exact_decimal == current_exact_decimal:
-            return False  
-        print(current_mpf/end)      
+            return False
+        print(current_mpf / end)
     return True
-    
 
 
 if __name__ == "__main__":
     # print(mpf(7.1))
     # print(to_double_precision_floating_point_binary(7.2))
     # print(double_precision_significant_digits("7205759403792795"))
-    # print(identify_range(1023.999999999999887))
+    print(identify_range(1023.999999999999887))
     # print(esegment_params(9))
-    print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-12)))
+    # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-12)))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))
