@@ -15,7 +15,7 @@ def test_next_binary_value_success():
 def test_next_binary_fp_increase_fraction():
     bits = str_to_list(
         "0011111111110011001100110011001100110011001100110011001100110011")
-    next_binary_fp(bits)
+    bits = next_binary_fp(bits)
     assert list_to_str(
         bits) == "0011111111110011001100110011001100110011001100110011001100110100"
 
@@ -23,7 +23,7 @@ def test_next_binary_fp_increase_fraction():
 def test_next_binary_fp_increase_exponent():
     bits = str_to_list(
         "0011111111111111111111111111111111111111111111111111111111111111")
-    next_binary_fp(bits)
+    bits = next_binary_fp(bits)
     assert list_to_str(
         bits) == "0100000000000000000000000000000000000000000000000000000000000000"
 
@@ -32,7 +32,7 @@ def test_next_binary_fp_argument_overflow():
     try:
         bits = str_to_list(
             "0111111111110011001100110011001100110011001100110011001100110011")
-        next_binary_fp(bits)
+        bits = next_binary_fp(bits)
         assert False
     except OverflowError as e:
         assert e.args[0] == "NaN"        
@@ -41,7 +41,7 @@ def test_next_binary_fp_result_overflow():
     try:
         bits = str_to_list(
             "0111111111101111111111111111111111111111111111111111111111111111")
-        next_binary_fp(bits)
+        bits = next_binary_fp(bits)
         assert False
     except OverflowError as e:
         assert e.args[0] == "Infinity"

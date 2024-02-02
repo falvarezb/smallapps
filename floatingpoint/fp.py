@@ -1,8 +1,10 @@
 """
-Module with functions to manipulate the binary and decimal representations of floating-point numbers according to the IEEE 754 standard
+Module with functions to manipulate the binary and decimal representations of floating-point 
+numbers according to the IEEE 754 standard
 
 Python's 'float' data type represents numbers as double-precision floating points. 
-To get around this limitation, some functions in this module make use of the mpmath arbitrary-precision library.
+To get around this limitation, some functions in this module make use of the mpmath 
+arbitrary-precision library.
 """
 
 import struct
@@ -24,11 +26,6 @@ def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[in
     fraction_bits = bits[12:]
     sign = 1 if bits[0] == 0 else -1
     return (sign, fraction_bits, exponent_bits, unbiased_exp)
-
-
-def update_double_precision_fp(fp: List[int], fraction: List[int], exponent: List[int]):
-    fp[12:] = fraction
-    fp[1:12] = exponent
 
 
 def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
@@ -139,7 +136,8 @@ def list_to_str(bits: list) -> str:
 
 
 def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
-    """Convert a number in decimal representation to its corresponding double-precision floating-point binary format
+    """Convert a number in decimal representation to its corresponding double-precision 
+    floating-point binary format
 
     The floating-point number is returned in binary and hexadecimal format
 
@@ -256,10 +254,11 @@ def to_floating_point_binary_ieee754(decimal: float):
 def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
     """Transform bit pattern representing a double-precision floating-point number to exact decimal
 
-    In order to circumvate Python's floating-point arithmetic limitations, this function uses an arbitrary-precision library instead
-    of Python's float
+    In order to circumvate Python's floating-point arithmetic limitations, this function uses an
+    arbitrary-precision library instead of Python's float
 
-    Return a tuple containing the exact decimal representation and the unbiased exponent of the binary format
+    Return a tuple containing the exact decimal representation and the unbiased exponent of 
+    the binary format
     """
     sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
     check_infinity_or_nan(fraction_bits, exponent_bits)
@@ -273,7 +272,8 @@ def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
 
 
 def esegment_params(e: int) -> Tuple[int, str, str, str]:
-    """Calculate parameters of the double-precision floating-point segment corresponding to the value of 'e'
+    """Calculate parameters of the double-precision floating-point segment corresponding 
+    to the value of 'e'
 
     Return tuple with the values: 
     - echo of e
@@ -330,7 +330,7 @@ def next_binary_value(bits) -> bool:
     return True
 
 
-def next_binary_fp(bits: List[int]) -> None:
+def next_binary_fp(bits: List[int]) -> List[int]:
     """Return the binary representation of the next double-precision floating-point number
 
     Argument is modified in place
@@ -342,6 +342,7 @@ def next_binary_fp(bits: List[int]) -> None:
     Returns:
         list[int]: bit pattern of the next double-precision floating-point number
     """
+    bits = bits.copy()
     _, fraction_bits, exponent_bits, _ = unpack_double_precision_fp(bits)
     check_infinity_or_nan(fraction_bits, exponent_bits)
 
@@ -350,14 +351,17 @@ def next_binary_fp(bits: List[int]) -> None:
         next_binary_value(exponent_bits)
         check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    update_double_precision_fp(bits, fraction_bits, exponent_bits)
+    bits[12:] = fraction_bits
+    bits[1:12] = exponent_bits
+    return bits
 
 
 def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
-    The floating-point numbers generated are represented by its exact decimal representation (there is a one-to-one correspondence between
-    the binary format of a floating-point number and its exact decimal representation)
+    The floating-point numbers generated are represented by its exact decimal representation 
+    (there is a one-to-one correspondence between the binary format of a floating-point number 
+    and its exact decimal representation)
 
     The tuple produced by the generator contains:
     - decimal representation up to the standard double-precision (around 16 digits)
@@ -365,7 +369,8 @@ def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
     - unbiased exponent of the binary format
 
 
-    The generator is seeded by a number in decimal representation that is passed to the function as an argument:
+    The generator is seeded by a number in decimal representation that is passed 
+    to the function as an argument:
         - the seed must be zero or a positive number
         - the first produced element is the double-precision floating-point number corresponding to the given seed
         - afterwards, elements are returned in ascending order
@@ -381,14 +386,15 @@ def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
 
     while True:
         yield (float(exact_decimal), exact_decimal, exp)
-        next_binary_fp(bits)
-        exact_decimal, exp = to_exact_decimal(bits)
+        next_bits = next_binary_fp(bits)
+        exact_decimal, exp = to_exact_decimal(next_bits)
 
 
 def identify_range(x: float) -> List[Tuple[int, int]]:
     """Given a float, calculate the nearest powers of 10 and 2 and return them in ascending order
 
-    72057594037927956 -> [(10, 16), (2, 56), (10, 17), (2, 57)] that reads: 10^16 < 2^56 < 72057594037927956 < 10^17 < 2^57
+    72057594037927956 -> [(10, 16), (2, 56), (10, 17), (2, 57)] that reads: 
+    10^16 < 2^56 < 72057594037927956 < 10^17 < 2^57
     """
     previous_power_of_2 = floor(log2(x))
     previous_power_of_10 = floor(log10(x))
