@@ -8,7 +8,7 @@ arbitrary-precision library.
 """
 
 import struct
-from math import log2, log10, floor
+from math import log2, log10, floor, isnan
 from functools import reduce
 from typing import List, Tuple, Generator
 from mpmath import mp, mpf, nstr
@@ -29,7 +29,8 @@ def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[in
 
 
 def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
-    """Determines how many digits of the given decimal number are significant when represented as a double-precision floating-point number
+    """Determines how many digits of the given decimal number are significant when represented 
+    as a double-precision floating-point number
 
     According to https://www.exploringbinary.com/decimal-precision-of-binary-floating-point-numbers/: 
 
@@ -37,8 +38,8 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
     and then convert it back to decimal, rounding to nearest to d digits, we will recover all of the original d-digit 
     decimal numbers. In other words, the d-digit number will round-trip."
 
-    Return a tuple containing the shortest decimal representation that round-trips (this is basically the value returned by the function 'float()')
-    and the number of significant digits
+    Return a tuple containing the shortest decimal representation that round-trips 
+    (this is basically the value returned by the function 'float()') and the number of significant digits
 
     "7.1000000000000034345" --> (16, "7.100000000000003")
     """
@@ -85,7 +86,7 @@ def double_precision_significant_digits(decimal_repr: str) -> Tuple[int, str]:
         decimal_repr = trimmed_decimal_repr
         representative = is_representative(original_exact_decimal, decimal_repr)
         if not representative:
-            # check if any of the neighbours (same order of magnitude values) is a representative
+            # check if any of the neighbours (other values with same number of digits) is a representative
             for i in range(0, 10):
                 neighbour = decimal_repr[:-1] + str(i)
                 representative = is_representative(original_exact_decimal, neighbour)
@@ -199,13 +200,16 @@ def to_floating_point_binary_ieee754(decimal: float):
     """Like 'to_floating_point_binary' but implementing the IEEE-754 algorithm manually
 
     """
-    # Handle special cases: positive/negative zero and infinities
+
+    # Handle special cases: positive/negative zero and infinities, NaN
     if decimal == 0.0:
         return '0' * 32
-    elif decimal == float('-inf'):
+    if decimal == float('-inf'):
         return '1' + '0' * 31
-    elif decimal == float('inf'):
+    if decimal == float('inf'):
         return '0' + '1' * 31
+    if isnan(decimal):
+        return '0' + '1' * 30 + '1'
 
     # Convert the number to its IEEE 754 single-precision binary representation
     bits = []
@@ -215,8 +219,7 @@ def to_floating_point_binary_ieee754(decimal: float):
     else:
         sign = '0'
 
-    exponent_bias = 127  # Bias for single-precision floating-point exponent
-    exponent = exponent_bias
+    exponent = 127  # Bias for single-precision floating-point exponent
     fraction = decimal
 
     # Normalize the fraction and calculate the exponent
@@ -234,6 +237,14 @@ def to_floating_point_binary_ieee754(decimal: float):
     exponent_bits = bin(exponent)[2:].zfill(8)
 
     # Convert the fraction to binary
+    # Repeatedly multiply it by 2 and note the integer part of the result (0 or 1) as the next
+    # binary digit after the binary point. 
+    # Continue this process until the fractional part becomes zero or until you reach the
+    # desired precision:
+    # - if the fractional part becomes zero, the binary representation is exact. 
+    # - if you reach thedesired precision, round the last bit to the nearest even number.
+    # This algorithm works because by multiplying by 2, we shift the binary point
+    # one position to the right, so that the factor of 2^-1 becomes the integer part.
     fraction_bits = []
     while fraction != 0 and len(fraction_bits) < 24:
         fraction *= 2
@@ -246,7 +257,7 @@ def to_floating_point_binary_ieee754(decimal: float):
 
     # Combine the sign, exponent, and fraction bits
     bits = sign + exponent_bits + \
-        "".join([str(i) for i in fraction_bits[:-1]]).zfill(23)
+        "".join([str(i) for i in fraction_bits]).ljust(23, '0')
 
     return (bits, hex(int(bits, 2)))
 
@@ -407,7 +418,7 @@ def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
     current_mpf = start
     current_exact_decimal = mpf(float(current_mpf))
 
-    while current_mpf < end:        
+    while current_mpf < end:
         previous_exact_decimal = current_exact_decimal
         current_mpf = current_mpf + precision
         current_exact_decimal = mpf(float(current_mpf))
@@ -419,11 +430,12 @@ def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
 
 if __name__ == "__main__":
     # print(mpf(7.1))
-    # print(to_double_precision_floating_point_binary(7.2))
-    # print(double_precision_significant_digits("7205759403792795"))
-    print(identify_range(1023.999999999999887))
+    #print(to_double_precision_floating_point_binary(7.2))
+    print(to_floating_point_binary_ieee754(52))
+    # print(double_precision_significant_digits("72057594037927955"))
+    # print(identify_range(1023.999999999999887))
     # print(esegment_params(9))
-    # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-12)))
+    # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
     # fp_gen = fp_gen(1)
     # print(next(fp_gen))
     # print(next(fp_gen))
@@ -440,5 +452,5 @@ if __name__ == "__main__":
 # print(decimal)
 # print(binary_val)
 # print(exact_decimal)
-
+    
     # tabulate_esegments(-10,11)
