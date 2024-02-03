@@ -111,21 +111,9 @@ def test_fp_gen_infinity():
         ("72057594037927956.", (17, "72057594037927952")),
         ("72057594037927956.323", (17, "72057594037927952")),
         ("1023.999999999999887", (17, "1023.9999999999999"))
-    ],
+    ]
 )
 def test_double_precision_significant_digits(input, expected):
-    # 7.100000000000003
-    assert double_precision_significant_digits(input) == expected
-    assert double_precision_significant_digits(input) == expected
-    assert double_precision_significant_digits(input) == expected
-    # 7.1
-    assert double_precision_significant_digits(input) == expected
-    assert double_precision_significant_digits(input) == expected
-    # 72057594037927956
-    assert double_precision_significant_digits(input) == expected
-    assert double_precision_significant_digits(input) == expected
-    assert double_precision_significant_digits(input) == expected
-    # 1023.999999999999887
     assert double_precision_significant_digits(input) == expected
 
 
@@ -172,55 +160,17 @@ def test_round_to_nearest_bool():
     assert round_to_nearest([0, 1, 1, 1], 3, False) == [1, 0, 0]
 
 
-def test_positive_decimal():
-    decimal = 52.0
-    expected_binary = '01000010010100000000000000000000'
-    expected_hex = '0x42500000'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (52.0, ('01000010010100000000000000000000', '0x42500000')),
+        (-52.0, ('11000010010100000000000000000000', '0xc2500000')),
+        (0.0, ('00000000000000000000000000000000', '0x0')),
+        (float('inf'), ('01111111100000000000000000000000', '0x7f800000')),
+        (float('-inf'), ('11111111100000000000000000000000', '0xff800000')),
+        (float('nan'), ('01111111100000000000000000000001', '0x7f800001'))
+    ]    
+)
+def test_to_single_precision_floating_point_binary_manual(input, expected):
+    assert to_single_precision_floating_point_binary_manual(input) == expected
 
-
-def test_negative_decimal():
-    decimal = -52.0
-    expected_binary = '11000010010100000000000000000000'
-    expected_hex = '0xc2500000'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
-
-
-def test_zero_decimal():
-    decimal = 0.0
-    expected_binary = '00000000000000000000000000000000'
-    expected_hex = '0x0'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
-
-
-def test_positive_infinity():
-    decimal = float('inf')
-    expected_binary = '01111111100000000000000000000000'
-    expected_hex = '0x7f800000'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
-
-
-def test_negative_infinity():
-    decimal = float('-inf')
-    expected_binary = '11111111100000000000000000000000'
-    expected_hex = '0xff800000'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
-
-
-def test_nan():
-    decimal = float('nan')
-    expected_binary = '01111111100000000000000000000001'
-    expected_hex = '0x7f800001'
-    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
-    assert binary == expected_binary
-    assert hex_ == expected_hex
