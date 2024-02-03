@@ -196,20 +196,28 @@ def round_to_nearest(bits: List[int], kth: int, is_any_following_digit_1: bool =
     return bits
 
 
-def to_floating_point_binary_ieee754(decimal: float):
-    """Like 'to_floating_point_binary' but implementing the IEEE-754 algorithm manually
+def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[str, str]:
+    """Manual implementation of the conversion of a decimal number to 
+    its IEEE 754 single-precision floating-point binary representation
 
+    The floating-point number is returned in binary and hexadecimal format
+
+    52.0 --> ('01000010010100000000000000000000', '0x42500000')
     """
 
     # Handle special cases: positive/negative zero and infinities, NaN
     if decimal == 0.0:
-        return '0' * 32
+        bits = '0' * 32
+        return (bits, hex(int(bits, 2)))
     if decimal == float('-inf'):
-        return '1' + '0' * 31
+        bits = '1' + '1' * 8 + '0' * 23
+        return (bits, hex(int(bits, 2)))
     if decimal == float('inf'):
-        return '0' + '1' * 31
+        bits = '0' + '1' * 8 + '0' * 23
+        return (bits, hex(int(bits, 2)))
     if isnan(decimal):
-        return '0' + '1' * 30 + '1'
+        bits = '0' + '1' * 8 + '0' * 22 + '1'
+        return (bits, hex(int(bits, 2)))
 
     # Convert the number to its IEEE 754 single-precision binary representation
     bits = []
@@ -431,7 +439,7 @@ def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
 if __name__ == "__main__":
     # print(mpf(7.1))
     #print(to_double_precision_floating_point_binary(7.2))
-    print(to_floating_point_binary_ieee754(52))
+    print(to_single_precision_floating_point_binary_manual(52))
     # print(double_precision_significant_digits("72057594037927955"))
     # print(identify_range(1023.999999999999887))
     # print(esegment_params(9))

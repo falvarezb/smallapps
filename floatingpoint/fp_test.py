@@ -1,9 +1,10 @@
 from fp import *
+import pytest
 
 
-def test_next_binary_value_overflow():
+def test_next_binary_value_overflow(): # [missing-function-docstring]
     bits = [1, 1, 1]
-    assert next_binary_value(bits)    
+    assert next_binary_value(bits)
 
 
 def test_next_binary_value_success():
@@ -35,7 +36,8 @@ def test_next_binary_fp_argument_overflow():
         bits = next_binary_fp(bits)
         assert False
     except OverflowError as e:
-        assert e.args[0] == "NaN"        
+        assert e.args[0] == "NaN"
+
 
 def test_next_binary_fp_result_overflow():
     try:
@@ -51,7 +53,7 @@ def test_to_exact_decimal_positive():
     bits = str_to_list(
         "0011111111110011001100110011001100110011001100110011001100110011")
     assert to_exact_decimal(bits) == (mpf(
-        '1.1999999999999999555910790149937383830547332763671875'),0)
+        '1.1999999999999999555910790149937383830547332763671875'), 0)
 
 
 def test_to_exact_decimal_negative():
@@ -80,10 +82,12 @@ def test_to_exact_decimal_infinity():
     except OverflowError as e:
         assert e.args[0] == "Infinity"
 
+
 def test_fp_gen():
     fp_generator = fp_gen(0.00000000000012343)
     assert next(fp_generator) == (0.00000000000012343, mpf('0.0000000000001234300000000000102340991445314016317948146994609714965918101370334625244140625'), -43)
     assert next(fp_generator) == (0.00000000000012343000000000004, mpf('0.00000000000012343000000000003547764811160377940497012878851013084613441606052219867706298828125'), -43)
+
 
 def test_fp_gen_infinity():
     fp_generator = fp_gen(1.7976931348623157e+308)
@@ -94,47 +98,63 @@ def test_fp_gen_infinity():
     except OverflowError as e:
         assert e.args[0] == "Infinity"
 
-def test_double_precision_significant_digits():
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        ("7.100000000000003", (16, "7.100000000000003")),
+        ("7.1000000000000031974423109204508364200592041015625", (16, "7.100000000000003")),
+        ("7.1000000000000034345", (16, "7.100000000000003")),
+        ("7.1000000000000000000000000000000000", (2, "7.1")),
+        ("7.09999999999999968", (17, "7.0999999999999996")),
+        ("72057594037927956", (17, "72057594037927952")),
+        ("72057594037927956.", (17, "72057594037927952")),
+        ("72057594037927956.323", (17, "72057594037927952")),
+        ("1023.999999999999887", (17, "1023.9999999999999"))
+    ],
+)
+def test_double_precision_significant_digits(input, expected):
     # 7.100000000000003
-    assert double_precision_significant_digits("7.100000000000003") == (16, "7.100000000000003")
-    assert double_precision_significant_digits("7.1000000000000031974423109204508364200592041015625") == (16, "7.100000000000003")
-    assert double_precision_significant_digits("7.1000000000000034345") == (16, "7.100000000000003")
+    assert double_precision_significant_digits(input) == expected
+    assert double_precision_significant_digits(input) == expected
+    assert double_precision_significant_digits(input) == expected
     # 7.1
-    assert double_precision_significant_digits("7.1000000000000000000000000000000000") == (2, "7.1") 
-    assert double_precision_significant_digits("7.09999999999999968") == (17, "7.0999999999999996")
+    assert double_precision_significant_digits(input) == expected
+    assert double_precision_significant_digits(input) == expected
     # 72057594037927956
-    assert double_precision_significant_digits("72057594037927956") == (17, "72057594037927952")    
-    assert double_precision_significant_digits("72057594037927956.") == (17, "72057594037927952")    
-    assert double_precision_significant_digits("72057594037927956.323") == (17, "72057594037927952")
+    assert double_precision_significant_digits(input) == expected
+    assert double_precision_significant_digits(input) == expected
+    assert double_precision_significant_digits(input) == expected
     # 1023.999999999999887
-    assert double_precision_significant_digits("1023.999999999999887") == (17, "1023.9999999999999")
-        
+    assert double_precision_significant_digits(input) == expected
+
+
 def test_round_to_nearest():
     # no actual rounding, all digits are kept
-    assert round_to_nearest([1,1,1,0,0,1], 6) == [1,1,1,0,0,1]
+    assert round_to_nearest([1, 1, 1, 0, 0, 1], 6) == [1, 1, 1, 0, 0, 1]
 
     # If the digit following the rounding position is 0, round down (truncate)
-    assert round_to_nearest([1,1,1,0,0,1], 3) == [1,1,1]
+    assert round_to_nearest([1, 1, 1, 0, 0, 1], 3) == [1, 1, 1]
 
     # If the digit following the rounding position is 1 and any of the following digits is 1, round up (add 1).
-    assert round_to_nearest([0,1,1,1,0,1], 3) == [1,0,0]
+    assert round_to_nearest([0, 1, 1, 1, 0, 1], 3) == [1, 0, 0]
 
     # If the digit following the rounding position is 1 and all of the following digits are 0, apply the tie-breaking rule:
-    #### If the digit at the rounding position is even (0), round down (truncate).
-    assert round_to_nearest([1,1,0,1,0,0], 3) == [1,1,0]
-    #### If the digit at the rounding position is odd (1), round up (add 1).
-    assert round_to_nearest([0,1,1,1,0,0], 3) == [1,0,0]
+    # If the digit at the rounding position is even (0), round down (truncate).
+    assert round_to_nearest([1, 1, 0, 1, 0, 0], 3) == [1, 1, 0]
+    # If the digit at the rounding position is odd (1), round up (add 1).
+    assert round_to_nearest([0, 1, 1, 1, 0, 0], 3) == [1, 0, 0]
 
     # Overflow error when rounding up
     try:
-        round_to_nearest([1,1,1,1,0,1], 3)
+        round_to_nearest([1, 1, 1, 1, 0, 1], 3)
         assert False
     except OverflowError:
         assert True
 
     # Overflow error when resolving tie
     try:
-        round_to_nearest([1,1,1,1,0,0], 3)
+        round_to_nearest([1, 1, 1, 1, 0, 0], 3)
         assert False
     except OverflowError:
         assert True
@@ -143,11 +163,64 @@ def test_round_to_nearest():
 def test_round_to_nearest_bool():
 
     # If the digit following the rounding position is 1 and any of the following digits is 1, round up (add 1).
-    assert round_to_nearest([0,1,1,1], 3, True) == [1,0,0]
+    assert round_to_nearest([0, 1, 1, 1], 3, True) == [1, 0, 0]
 
     # If the digit following the rounding position is 1 and all of the following digits are 0, apply the tie-breaking rule:
-    #### If the digit at the rounding position is even (0), round down (truncate).
-    assert round_to_nearest([1,1,0,1], 3, False) == [1,1,0]
-    #### If the digit at the rounding position is odd (1), round up (add 1).
-    assert round_to_nearest([0,1,1,1], 3, False) == [1,0,0]
+    # If the digit at the rounding position is even (0), round down (truncate).
+    assert round_to_nearest([1, 1, 0, 1], 3, False) == [1, 1, 0]
+    # If the digit at the rounding position is odd (1), round up (add 1).
+    assert round_to_nearest([0, 1, 1, 1], 3, False) == [1, 0, 0]
 
+
+def test_positive_decimal():
+    decimal = 52.0
+    expected_binary = '01000010010100000000000000000000'
+    expected_hex = '0x42500000'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
+
+
+def test_negative_decimal():
+    decimal = -52.0
+    expected_binary = '11000010010100000000000000000000'
+    expected_hex = '0xc2500000'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
+
+
+def test_zero_decimal():
+    decimal = 0.0
+    expected_binary = '00000000000000000000000000000000'
+    expected_hex = '0x0'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
+
+
+def test_positive_infinity():
+    decimal = float('inf')
+    expected_binary = '01111111100000000000000000000000'
+    expected_hex = '0x7f800000'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
+
+
+def test_negative_infinity():
+    decimal = float('-inf')
+    expected_binary = '11111111100000000000000000000000'
+    expected_hex = '0xff800000'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
+
+
+def test_nan():
+    decimal = float('nan')
+    expected_binary = '01111111100000000000000000000001'
+    expected_hex = '0x7f800001'
+    binary, hex_ = to_single_precision_floating_point_binary_manual(decimal)
+    assert binary == expected_binary
+    assert hex_ == expected_hex
