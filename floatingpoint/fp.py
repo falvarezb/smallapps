@@ -302,7 +302,8 @@ def esegment_params(e: int) -> Tuple[int, str, str, str]:
     """
     p = 52
     two = mpf(2)
-    (min_val, max_val) = [two**e, two**e * (two**(p + 1) - 1) / two**p]
+    # (min_val, max_val) = [two**e, two**e * (two**(p + 1) - 1) / two**p]
+    (min_val, max_val) = (two**e, two**(e+1) * (1-two**(-p - 1)))
     # distance = (max-min)/(2**p-1)
     distance = two**(e - p)
     prec = 200
@@ -318,11 +319,11 @@ def tabulate_esegments(start: int, end: int):
     max_max = max([len(segment[2]) for segment in segments])
     max_distance = max([len(segment[3]) for segment in segments])
 
-    header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-8}}|"
-    row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 7)}|"
+    header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-len('distance') if len('distance') < max_distance else 1}}|"
+    row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 12)}|"
 
     def prettify(r):
-        return f"| {r[0]:^{max_e}}| {r[1]:{max_min}}| {r[2]:{max_max}}| {r[3]:{max_distance}}|"
+        return f"| {r[0]:^{max_e}}| {r[1]:{max_min}}| {r[2]:{max_max}}| {r[3]:{max_distance+5}}|"
 
     print('\n')
     print(header)
@@ -439,7 +440,7 @@ def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
 if __name__ == "__main__":
     # print(mpf(7.1))
     #print(to_double_precision_floating_point_binary(7.2))
-    print(to_single_precision_floating_point_binary_manual(52))
+    # print(to_single_precision_floating_point_binary_manual(52))
     # print(double_precision_significant_digits("72057594037927955"))
     # print(identify_range(1023.999999999999887))
     # print(esegment_params(9))
@@ -454,11 +455,11 @@ if __name__ == "__main__":
     # print(next(fp_gen))
 
 
-# decimal = 1.2
-# binary_val = to_floating_point_binary(decimal,False)[0]
-# exact_decimal = to_exact_decimal(binary_val)
-# print(decimal)
-# print(binary_val)
-# print(exact_decimal)
-    
-    # tabulate_esegments(-10,11)
+    # decimal = 1.2
+    # binary_val = to_floating_point_binary(decimal,False)[0]
+    # exact_decimal = to_exact_decimal(binary_val)
+    # print(decimal)
+    # print(binary_val)
+    # print(exact_decimal)
+        
+    tabulate_esegments(50,59)
