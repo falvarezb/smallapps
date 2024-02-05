@@ -406,8 +406,8 @@ def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
 
     while True:
         yield (float(exact_decimal), exact_decimal, exp)
-        next_bits = next_binary_fp(bits)
-        exact_decimal, exp = to_exact_decimal(next_bits)
+        bits = next_binary_fp(bits)
+        exact_decimal, exp = to_exact_decimal(bits)
 
 
 def identify_range(x: float) -> List[Tuple[int, int]]:
@@ -445,16 +445,16 @@ if __name__ == "__main__":
     # print(identify_range(1023.999999999999887))
     # print(esegment_params(9))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
-    # fp_gen = fp_gen(1)
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
-    # print(next(fp_gen))
+    fp_generator = fp_gen(72057594037927943)
+    print(next(fp_generator))
+    print(next(fp_generator))
+    print(next(fp_generator))
+    print(next(fp_generator))
+    print(next(fp_generator))
+    print(next(fp_generator))
+    print(next(fp_generator))
 
-
+    
     # decimal = 1.2
     # binary_val = to_floating_point_binary(decimal,False)[0]
     # exact_decimal = to_exact_decimal(binary_val)
@@ -462,4 +462,4 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
         
-    tabulate_esegments(50,59)
+    # tabulate_esegments(50,59)
