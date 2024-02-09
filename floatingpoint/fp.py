@@ -441,25 +441,25 @@ if __name__ == "__main__":
     # print(mpf(7.1))
     #print(to_double_precision_floating_point_binary(7.2))
     # print(to_single_precision_floating_point_binary_manual(52))
-    # print(double_precision_significant_digits("72057594037927955"))
+    # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
+    print(identify_range(72057594037927956))
     # print(esegment_params(9))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
-    fp_generator = fp_gen(72057594037927943)
-    print(next(fp_generator))
-    print(next(fp_generator))
-    print(next(fp_generator))
-    print(next(fp_generator))
-    print(next(fp_generator))
-    print(next(fp_generator))
-    print(next(fp_generator))
+    # fp_generator = fp_gen(72057594037927870)
+    # print(next(fp_generator))
+    # print(next(fp_generator))
+    # print(next(fp_generator))
+    # print(next(fp_generator))
+    # print(next(fp_generator))
+    # print(next(fp_generator))
+    # print(next(fp_generator))
 
     
-    # decimal = 1.2
-    # binary_val = to_floating_point_binary(decimal,False)[0]
-    # exact_decimal = to_exact_decimal(binary_val)
+    # decimal = 72057594037927945
+    # binary_val = to_double_precision_floating_point_binary(decimal)[0]
+    # exact_decimal = to_exact_decimal(str_to_list(binary_val))
     # print(decimal)
     # print(binary_val)
-    # print(exact_decimal)
-        
+    # print(exact_decimal)        
     # tabulate_esegments(50,59)
