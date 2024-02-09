@@ -12,12 +12,18 @@ from math import log2, log10, floor, isnan
 from functools import reduce
 from typing import List, Tuple, Generator
 from mpmath import mp, mpf, nstr
+from fputil import str_to_list, list_to_str
 
 mp.dps = 100
 
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
-    """Decompose the binary representation of a double-precision floating-point number into its elements: sign, fraction bits, exponent bits, unbiased exponent
+    """Decompose the binary representation of a double-precision floating-point number 
+    into its elements: 
+    - sign
+    - fraction bits
+    - exponent bits
+    - unbiased exponent
     """
     exponent_bits = bits[1:12]
     biased_exp = int(list_to_str(exponent_bits), 2)
@@ -119,21 +125,6 @@ def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
             raise OverflowError("Infinity")
         raise OverflowError("NaN")
 
-
-def str_to_list(bits: str) -> List[int]:
-    """Convert a string made up of digits into a list of integers
-
-    '1001' --> list[1,0,0,1]
-    """
-    return [int(digit) for digit in bits]
-
-
-def list_to_str(bits: list) -> str:
-    """Concatenate the elements of a list into a single string
-
-    list[1,0,0,1] --> '1001'  
-    """
-    return "".join([str(bit) for bit in bits])
 
 
 def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
@@ -273,8 +264,10 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
 def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
     """Transform bit pattern representing a double-precision floating-point number to exact decimal
 
-    In order to circumvate Python's floating-point arithmetic limitations, this function uses an
-    arbitrary-precision library instead of Python's float
+    In order to circumvate Python's floating-point arithmetic rules, namely, 
+    that decimal numbers are rounded to the maximum number of digits needed to uniquely 
+    distinguish that value from the adjacent values, this function uses an arbitrary-precision 
+    library instead of Python's float
 
     Return a tuple containing the exact decimal representation and the unbiased exponent of 
     the binary format
@@ -352,8 +345,7 @@ def next_binary_value(bits) -> bool:
 
 def next_binary_fp(bits: List[int]) -> List[int]:
     """Return the binary representation of the next double-precision floating-point number
-
-    Argument is modified in place
+    
     Raise OverflowError if the argument or the resulting value is either 'Infinity' or 'NaN'
 
     Args:
@@ -410,6 +402,26 @@ def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
         exact_decimal, exp = to_exact_decimal(bits)
 
 
+def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
+    """Return a list of n double-precision floating-point numbers as defined by IEEE 754.
+
+    The list contains tuples with the following elements:
+    - decimal representation up to the standard double-precision (around 16 digits)
+    - exact decimal representation
+    - unbiased exponent of the binary format
+
+    The list is seeded by a number in decimal representation that is passed to the function as an argument:
+        - the seed must be zero or a positive number
+        - the first produced element is the double-precision floating-point number corresponding to the given seed
+        - afterwards, elements are returned in ascending order
+        - the list stops and throws OverflowError when finding the values "Infinity" or "NaN"
+
+    WARNING: only positive floating-point numbers are generated (negative ones can be obtained by symmetry)
+    """
+    assert n > 0, "n must be a positive integer"
+    fp_generator = fp_gen(seed)
+    return [next(fp_generator) for _ in range(n)]
+
 def identify_range(x: float) -> List[Tuple[int, int]]:
     """Given a float, calculate the nearest powers of 10 and 2 and return them in ascending order
 
@@ -443,7 +455,7 @@ if __name__ == "__main__":
     # print(to_single_precision_floating_point_binary_manual(52))
     # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
-    print(identify_range(72057594037927956))
+    # print(identify_range(72057594037927956))
     # print(esegment_params(9))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
     # fp_generator = fp_gen(72057594037927870)
@@ -454,6 +466,7 @@ if __name__ == "__main__":
     # print(next(fp_generator))
     # print(next(fp_generator))
     # print(next(fp_generator))
+    print(get_n_fp(72057594037927956, 3))
 
     
     # decimal = 72057594037927945
