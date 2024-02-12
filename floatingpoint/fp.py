@@ -5,6 +5,11 @@ numbers according to the IEEE 754 standard
 Python's 'float' data type represents numbers as double-precision floating points. 
 To get around this limitation, some functions in this module make use of the mpmath 
 arbitrary-precision library.
+
+In Python, floating-point numbers are automatically displayed in exponential notation when the absolute 
+value of the number is either very large (greater than or equal to 1e16) or very small (less than 1e-4 and not equal to zero).
+
+
 """
 
 import struct
@@ -15,6 +20,31 @@ from mpmath import mp, mpf, nstr
 from fputil import str_to_list, list_to_str
 
 mp.dps = 100
+
+
+def normalise_to_significant_digits(num, num_digits) -> Tuple[str, int]:
+    """Normalise a number to a given number of significant digits
+
+    e.g. (7.20575940927956, 23) --> ('7.2057594092795600460022', 0)
+
+    Implementation details: when doing exponential formatting, Python rounds the exact representation of
+    the float number to the given number of significant digits:
+
+    7.20575940927956 --> 7.2057594092795600460021887556649744510650634765625 --> 7.2057594092795600460022
+
+    If the exact representation has fewer digits than 'num_digits', then the result is padded with zeros.
+
+    Args:
+        num (float): number to be normalised
+        num_digits (int): number of significant digits
+
+    Returns:
+        (str, int): a tuple containing the normalised number and the exponent resulting from the normalisation
+    """
+    exp_repr = f"{float(num):.{num_digits-1}e}"  # -1 as in this expression, num_digits is number of digits after the decimal point
+    mantissa, exponent = exp_repr.split('e')
+    exponent = int(exponent)
+    return (mantissa, exponent)
 
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
@@ -124,7 +154,6 @@ def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
         if not reduce(lambda x, y: bool(x) or bool(y), fraction, False):
             raise OverflowError("Infinity")
         raise OverflowError("NaN")
-
 
 
 def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
@@ -237,10 +266,10 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
 
     # Convert the fraction to binary
     # Repeatedly multiply it by 2 and note the integer part of the result (0 or 1) as the next
-    # binary digit after the binary point. 
+    # binary digit after the binary point.
     # Continue this process until the fractional part becomes zero or until you reach the
     # desired precision:
-    # - if the fractional part becomes zero, the binary representation is exact. 
+    # - if the fractional part becomes zero, the binary representation is exact.
     # - if you reach thedesired precision, round the last bit to the nearest even number.
     # This algorithm works because by multiplying by 2, we shift the binary point
     # one position to the right, so that the factor of 2^-1 becomes the integer part.
@@ -296,7 +325,7 @@ def esegment_params(e: int) -> Tuple[int, str, str, str]:
     p = 52
     two = mpf(2)
     # (min_val, max_val) = [two**e, two**e * (two**(p + 1) - 1) / two**p]
-    (min_val, max_val) = (two**e, two**(e+1) * (1-two**(-p - 1)))
+    (min_val, max_val) = (two**e, two**(e + 1) * (1 - two**(-p - 1)))
     # distance = (max-min)/(2**p-1)
     distance = two**(e - p)
     prec = 200
@@ -345,7 +374,7 @@ def next_binary_value(bits) -> bool:
 
 def next_binary_fp(bits: List[int]) -> List[int]:
     """Return the binary representation of the next double-precision floating-point number
-    
+
     Raise OverflowError if the argument or the resulting value is either 'Infinity' or 'NaN'
 
     Args:
@@ -422,6 +451,26 @@ def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
     fp_generator = fp_gen(seed)
     return [next(fp_generator) for _ in range(n)]
 
+# def map_fp_to_decimal(fp: float, d: int) -> Tuple[float, int]:
+#     """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
+
+#     The list is ordered in ascending order
+#     """
+#     l = len(str(fp))
+#     assert l >= d, "infinite values"
+
+#     # find the first d-digit decimal number
+#     first = str(fp)
+#     while len(first.rstrip('0').rstrip('.')) > d:
+#         first = first[:-1] + '0'
+
+#     # find the distance between d-digit decimal numbers
+#     distance = first/10**(l-d)
+
+#     # forward search
+#     numbers = []
+
+
 def identify_range(x: float) -> List[Tuple[int, int]]:
     """Given a float, calculate the nearest powers of 10 and 2 and return them in ascending order
 
@@ -451,7 +500,7 @@ def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
 
 if __name__ == "__main__":
     # print(mpf(7.1))
-    #print(to_double_precision_floating_point_binary(7.2))
+    # print(to_double_precision_floating_point_binary(7.2))
     # print(to_single_precision_floating_point_binary_manual(52))
     # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
@@ -466,13 +515,14 @@ if __name__ == "__main__":
     # print(next(fp_generator))
     # print(next(fp_generator))
     # print(next(fp_generator))
-    print(get_n_fp(72057594037927956, 3))
+    # print(get_n_fp(72057594037927956, 3))
+    print(normalise_to_significant_digits(7.20575940927956, 23))
+    print(normalise_to_significant_digits(0.0454, 1))
 
-    
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
     # exact_decimal = to_exact_decimal(str_to_list(binary_val))
     # print(decimal)
     # print(binary_val)
-    # print(exact_decimal)        
+    # print(exact_decimal)
     # tabulate_esegments(50,59)
