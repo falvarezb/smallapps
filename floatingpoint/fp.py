@@ -451,24 +451,21 @@ def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
     fp_generator = fp_gen(seed)
     return [next(fp_generator) for _ in range(n)]
 
-# def map_fp_to_decimal(fp: float, d: int) -> Tuple[float, int]:
-#     """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
+def map_fp_to_decimal(fp: float, d: int):
+    """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
 
-#     The list is ordered in ascending order
-#     """
-#     l = len(str(fp))
-#     assert l >= d, "infinite values"
+    The list is ordered in ascending order
+    """
+    fp = float(fp) # ensuring that the argument is a Python float
+    d_digit_number, exp = normalise_to_significant_digits(fp, d)
 
-#     # find the first d-digit decimal number
-#     first = str(fp)
-#     while len(first.rstrip('0').rstrip('.')) > d:
-#         first = first[:-1] + '0'
+    numbers = list()
+    for i in range(10):
+        candidate = f"{d_digit_number[:-1] + str(i)}e{exp}"
+        if float(candidate) == fp:
+            numbers.append(candidate)
 
-#     # find the distance between d-digit decimal numbers
-#     distance = first/10**(l-d)
-
-#     # forward search
-#     numbers = []
+    return numbers
 
 
 def identify_range(x: float) -> List[Tuple[int, int]]:
@@ -516,8 +513,9 @@ if __name__ == "__main__":
     # print(next(fp_generator))
     # print(next(fp_generator))
     # print(get_n_fp(72057594037927956, 3))
-    print(normalise_to_significant_digits(7.20575940927956, 23))
-    print(normalise_to_significant_digits(0.0454, 1))
+    # print(normalise_to_significant_digits(72057594037927956, 16))
+    # print(normalise_to_significant_digits(0.0454, 1))
+    print(map_fp_to_decimal(72057594037927956, 16))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
