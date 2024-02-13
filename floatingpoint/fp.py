@@ -9,7 +9,11 @@ arbitrary-precision library.
 In Python, floating-point numbers are automatically displayed in exponential notation when the absolute 
 value of the number is either very large (greater than or equal to 1e16) or very small (less than 1e-4 and not equal to zero).
 
+https://docs.python.org/3/tutorial/floatingpoint.html
 
+Interestingly, there are many different decimal numbers that share the same nearest approximate binary fraction [...] Historically, 
+the Python prompt and built-in repr() function would choose the one with 17 significant digits, 0.10000000000000001. 
+Starting with Python 3.1, Python (on most systems) is now able to choose the shortest of these and simply display 0.1.
 """
 
 import struct
@@ -460,6 +464,18 @@ def map_fp_to_decimal(fp: float, d: int):
     d_digit_number, exp = normalise_to_significant_digits(fp, d)
 
     numbers = list()
+
+    # given a number in string form, I want to loop over each decimal place, starting from the rightmost digit
+    # for each decimal place, I want to create a new number by replacing the digit at that place with each of the digits from 0 to 9
+    # the resulting number in each step must be checked to see if it is equal to a given variable x
+    # if it is, then it is added to the list of numbers
+    # for i in range(len(d_digit_number)):
+    #     for j in range(10):
+    #         new_number = d_digit_number[:i] + str(j) + d_digit_number[i+1:]
+    #         if float(new_number) == fp:
+    #             numbers.append(float(new_number))
+    
+
     for i in range(10):
         candidate = f"{d_digit_number[:-1] + str(i)}e{exp}"
         if float(candidate) == fp:
@@ -515,8 +531,8 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(map_fp_to_decimal(72057594037927956, 16))
-
+    print(map_fp_to_decimal(72057594037927956, 15))
+    
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
     # exact_decimal = to_exact_decimal(str_to_list(binary_val))
@@ -524,3 +540,5 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
+
+
