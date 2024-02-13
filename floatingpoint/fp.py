@@ -464,11 +464,12 @@ def map_fp_to_decimal(dec: Decimal, d: int):
     The list is ordered in ascending order
     """
     fp = float(dec)
-    _, digits, _ = dec.as_tuple()
+    _, digits, exp = dec.as_tuple()
     dec_len = len(digits)
-    incr = Decimal(10)**(dec_len - d)
+    incr = Decimal(10)**(exp + dec_len - d)
 
-    lower_d_digit_number = Decimal(f"{str(dec)[:d]}{'0' * (dec_len - d)}")
+    # lower_d_digit_number = round(dec, d-1)
+    lower_d_digit_number = Decimal(f"{str(dec)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
     upper_d_digit_number = lower_d_digit_number + incr
 
     numbers = list()
@@ -530,7 +531,7 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(map_fp_to_decimal(Decimal('72057594037927956'), 17))
+    print(map_fp_to_decimal(Decimal('72057594037927952'), 17))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
