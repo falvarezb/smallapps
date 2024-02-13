@@ -16,6 +16,8 @@ the Python prompt and built-in repr() function would choose the one with 17 sign
 Starting with Python 3.1, Python (on most systems) is now able to choose the shortest of these and simply display 0.1.
 """
 
+from decimal import Decimal
+import numbers
 import struct
 from math import log2, log10, floor, isnan
 from functools import reduce
@@ -455,33 +457,30 @@ def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
     fp_generator = fp_gen(seed)
     return [next(fp_generator) for _ in range(n)]
 
-def map_fp_to_decimal(fp: float, d: int):
+
+def map_fp_to_decimal(dec: Decimal, d: int):
     """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
 
     The list is ordered in ascending order
     """
-    fp = float(fp) # ensuring that the argument is a Python float
-    d_digit_number, exp = normalise_to_significant_digits(fp, d)
+    fp = float(dec)
+    _, digits, _ = dec.as_tuple()
+    dec_len = len(digits)
+    incr = Decimal(10)**(dec_len - d)
+
+    lower_d_digit_number = Decimal(f"{str(dec)[:d]}{'0' * (dec_len - d)}")
+    upper_d_digit_number = lower_d_digit_number + incr
 
     numbers = list()
+    while (float(lower_d_digit_number) == fp):
+        numbers.append(lower_d_digit_number)
+        lower_d_digit_number -= incr
 
-    # given a number in string form, I want to loop over each decimal place, starting from the rightmost digit
-    # for each decimal place, I want to create a new number by replacing the digit at that place with each of the digits from 0 to 9
-    # the resulting number in each step must be checked to see if it is equal to a given variable x
-    # if it is, then it is added to the list of numbers
-    # for i in range(len(d_digit_number)):
-    #     for j in range(10):
-    #         new_number = d_digit_number[:i] + str(j) + d_digit_number[i+1:]
-    #         if float(new_number) == fp:
-    #             numbers.append(float(new_number))
-    
+    while (float(upper_d_digit_number) == fp):
+        numbers.append(upper_d_digit_number)
+        upper_d_digit_number += incr
 
-    for i in range(10):
-        candidate = f"{d_digit_number[:-1] + str(i)}e{exp}"
-        if float(candidate) == fp:
-            numbers.append(candidate)
-
-    return numbers
+    return (len(numbers), sorted(numbers))
 
 
 def identify_range(x: float) -> List[Tuple[int, int]]:
@@ -531,8 +530,8 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(map_fp_to_decimal(72057594037927956, 15))
-    
+    print(map_fp_to_decimal(Decimal('72057594037927956'), 17))
+
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
     # exact_decimal = to_exact_decimal(str_to_list(binary_val))
@@ -540,5 +539,3 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-
-
