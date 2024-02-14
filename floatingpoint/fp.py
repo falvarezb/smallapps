@@ -28,31 +28,6 @@ from fputil import str_to_list, list_to_str
 mp.dps = 100
 
 
-def normalise_to_significant_digits(num, num_digits) -> Tuple[str, int]:
-    """Normalise a number to a given number of significant digits
-
-    e.g. (7.20575940927956, 23) --> ('7.2057594092795600460022', 0)
-
-    Implementation details: when doing exponential formatting, Python rounds the exact representation of
-    the float number to the given number of significant digits:
-
-    7.20575940927956 --> 7.2057594092795600460021887556649744510650634765625 --> 7.2057594092795600460022
-
-    If the exact representation has fewer digits than 'num_digits', then the result is padded with zeros.
-
-    Args:
-        num (float): number to be normalised
-        num_digits (int): number of significant digits
-
-    Returns:
-        (str, int): a tuple containing the normalised number and the exponent resulting from the normalisation
-    """
-    exp_repr = f"{float(num):.{num_digits-1}e}"  # -1 as in this expression, num_digits is number of digits after the decimal point
-    mantissa, exponent = exp_repr.split('e')
-    exponent = int(exponent)
-    return (mantissa, exponent)
-
-
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
     """Decompose the binary representation of a double-precision floating-point number 
     into its elements: 
