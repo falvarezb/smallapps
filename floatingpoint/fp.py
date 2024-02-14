@@ -16,8 +16,7 @@ the Python prompt and built-in repr() function would choose the one with 17 sign
 Starting with Python 3.1, Python (on most systems) is now able to choose the shortest of these and simply display 0.1.
 """
 
-from decimal import Decimal
-import numbers
+from decimal import Decimal, setcontext, Context, ROUND_HALF_EVEN
 import struct
 from math import log2, log10, floor, isnan
 from functools import reduce
@@ -271,7 +270,7 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
     return (bits, hex(int(bits, 2)))
 
 
-def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
+def to_exact_decimal(bits: List[int]) -> Tuple[Decimal, int]:
     """Transform bit pattern representing a double-precision floating-point number to exact decimal
 
     In order to circumvate Python's floating-point arithmetic rules, namely, 
@@ -282,15 +281,16 @@ def to_exact_decimal(bits: List[int]) -> Tuple[mpf, int]:
     Return a tuple containing the exact decimal representation and the unbiased exponent of 
     the binary format
     """
+    setcontext(Context(prec=400, rounding=ROUND_HALF_EVEN))
     sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
     check_infinity_or_nan(fraction_bits, exponent_bits)
 
-    half = mpf('0.5')
-    mantissa = mpf(1)
+    half = Decimal(0.5)
+    mantissa = Decimal(1)
     for i in range(1, len(fraction_bits) + 1):
         place_value = fraction_bits[i - 1] * half**i
         mantissa += place_value
-    return (sign * mantissa * mpf(2)**unbiased_exp, unbiased_exp)
+    return (sign * mantissa * Decimal(2)**unbiased_exp, unbiased_exp)
 
 
 def esegment_params(e: int) -> Tuple[int, str, str, str]:
