@@ -481,7 +481,7 @@ def map_fp_to_decimal(dec: Decimal, d: int):
         numbers.append(upper_d_digit_number)
         upper_d_digit_number += incr
 
-    return (len(numbers), sorted(numbers))
+    return (len(numbers),str(incr), sorted(numbers))
 
 
 def identify_range(x: float) -> List[Tuple[int, int]]:
@@ -531,7 +531,7 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(map_fp_to_decimal(Decimal('72057594037927952'), 17))
+    print(map_fp_to_decimal(Decimal('72057594037927956'), 17))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
