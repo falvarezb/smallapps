@@ -388,24 +388,11 @@ def next_binary_fp(bits: List[int]) -> List[int]:
 def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
-    The floating-point numbers generated are represented by its exact decimal representation 
-    (there is a one-to-one correspondence between the binary format of a floating-point number 
-    and its exact decimal representation)
+    The numbers are generated in ascending order by incrementing the binary representation of 
+    the given seed one at a time. In case of reaching the values "Infinity" or "NaN", the generator
+    throws an OverflowError.
 
-    The tuple produced by the generator contains:
-    - exact decimal representation
-    - decimal representation up to the standard double-precision (around 16 digits)
-    - unbiased exponent of the binary format
-
-
-    The generator is seeded by a number in decimal representation that is passed 
-    to the function as an argument:
-        - the seed must be zero or a positive number
-        - the first produced element is the double-precision floating-point number corresponding to the given seed
-        - afterwards, elements are returned in ascending order
-        - generator stops and throws OverflowError when finding the values "Infinity" or "NaN"
-
-    WARNING: only positive floating-point numbers are generated (negative ones can be obtained by symmetry)
+    The format of the generated numbers is the one corresponding to the function 'from_binary_to_decimal'
     """
     assert seed >= 0, "seed must be positive or zero"
 
