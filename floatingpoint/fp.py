@@ -136,9 +136,10 @@ def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
         raise OverflowError("NaN")
 
 
-def to_double_precision_floating_point_binary(number: float) -> Tuple[str, str]:
-    """Convert a number in decimal representation to its corresponding double-precision 
-    floating-point binary format
+def from_decimal_to_binary(number: float) -> Tuple[str, str]:
+    """Convert a double-precision floating-point number from decimal to binary representation
+
+    from_binary_to_decimal(from_decimal_to_binary(x)) == x
 
     The floating-point number is returned in binary and hexadecimal format
 
@@ -271,7 +272,7 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
 
 
 def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
-    """Convert a double-precision floating-point number from its binary representation to its decimal representation
+    """Convert a double-precision floating-point number from binary to decimal representation
 
     The decimal representation returnd by this function consists of: 
     - the exact decimal value of the floating-point number
@@ -408,7 +409,7 @@ def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
     """
     assert seed >= 0, "seed must be positive or zero"
 
-    bits = to_double_precision_floating_point_binary(seed)[0]
+    bits = from_decimal_to_binary(seed)[0]
     bits = str_to_list(bits)
     exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
