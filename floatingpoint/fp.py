@@ -270,16 +270,21 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
     return (bits, hex(int(bits, 2)))
 
 
-def to_exact_decimal(bits: List[int]) -> Tuple[Decimal, int]:
-    """Transform bit pattern representing a double-precision floating-point number to exact decimal
+def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
+    """Convert a double-precision floating-point number from its binary representation to its decimal representation
 
-    In order to circumvate Python's floating-point arithmetic rules, namely, 
-    that decimal numbers are rounded to the maximum number of digits needed to uniquely 
-    distinguish that value from the adjacent values, this function uses an arbitrary-precision 
-    library instead of Python's float
+    The decimal representation returnd by this function consists of: 
+    - the exact decimal value of the floating-point number
+    - the decimal value selected by Python as representative of the floating-point number
 
-    Return a tuple containing the exact decimal representation and the unbiased exponent of 
-    the binary format
+    Normally, the latter is shorter than the former, and it is the value returned by the function 'float()': it is the
+    decimal number with the maximum number of digits needed to uniquely distinguish that value from the adjacent values
+    
+    Args:
+        bits (list[int]): binary representation of the double-precision floating-point number
+    
+    Returns:
+        tuple[Decimal, float, int]: exact decimal representation, Python's 'float' representation and unbiased exponent of the binary format
     """
     setcontext(Context(prec=400, rounding=ROUND_HALF_EVEN))
     sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
@@ -290,7 +295,8 @@ def to_exact_decimal(bits: List[int]) -> Tuple[Decimal, int]:
     for i in range(1, len(fraction_bits) + 1):
         place_value = fraction_bits[i - 1] * half**i
         mantissa += place_value
-    return (sign * mantissa * Decimal(2)**unbiased_exp, unbiased_exp)
+    exact_decimal = sign * mantissa * Decimal(2)**unbiased_exp
+    return (exact_decimal, float(exact_decimal), unbiased_exp)
 
 
 def esegment_params(e: int) -> Tuple[int, str, str, str]:
@@ -378,7 +384,7 @@ def next_binary_fp(bits: List[int]) -> List[int]:
     return bits
 
 
-def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
+def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
     The floating-point numbers generated are represented by its exact decimal representation 
@@ -404,12 +410,12 @@ def fp_gen(seed: float) -> Generator[Tuple[float, mpf, int], None, None]:
 
     bits = to_double_precision_floating_point_binary(seed)[0]
     bits = str_to_list(bits)
-    exact_decimal, exp = to_exact_decimal(bits)
+    exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
     while True:
-        yield (float(exact_decimal), exact_decimal, exp)
+        yield (exact_decimal, decimal, exp)
         bits = next_binary_fp(bits)
-        exact_decimal, exp = to_exact_decimal(bits)
+        exact_decimal, decimal,  exp = from_binary_to_decimal(bits)
 
 
 def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
