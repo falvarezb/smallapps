@@ -279,7 +279,7 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
     - the decimal value selected by Python as representative of the floating-point number
 
     Normally, the latter is shorter than the former, and it is the value returned by the function 'float()': it is the
-    decimal number with the maximum number of digits needed to uniquely distinguish that value from the adjacent values
+    decimal number with the maximum number of digits (around 16) needed to uniquely distinguish that value from the adjacent values
     
     Args:
         bits (list[int]): binary representation of the double-precision floating-point number
@@ -393,8 +393,8 @@ def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
     and its exact decimal representation)
 
     The tuple produced by the generator contains:
-    - decimal representation up to the standard double-precision (around 16 digits)
     - exact decimal representation
+    - decimal representation up to the standard double-precision (around 16 digits)
     - unbiased exponent of the binary format
 
 
@@ -419,21 +419,10 @@ def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
         exact_decimal, decimal,  exp = from_binary_to_decimal(bits)
 
 
-def get_n_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
-    """Return a list of n double-precision floating-point numbers as defined by IEEE 754.
+def next_n_binary_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
+    """Convenience function to return the next n double-precision floating-point numbers in ascending order
 
-    The list contains tuples with the following elements:
-    - decimal representation up to the standard double-precision (around 16 digits)
-    - exact decimal representation
-    - unbiased exponent of the binary format
-
-    The list is seeded by a number in decimal representation that is passed to the function as an argument:
-        - the seed must be zero or a positive number
-        - the first produced element is the double-precision floating-point number corresponding to the given seed
-        - afterwards, elements are returned in ascending order
-        - the list stops and throws OverflowError when finding the values "Infinity" or "NaN"
-
-    WARNING: only positive floating-point numbers are generated (negative ones can be obtained by symmetry)
+    See next_binary_fp() for more details
     """
     assert n > 0, "n must be a positive integer"
     fp_generator = fp_gen(seed)
