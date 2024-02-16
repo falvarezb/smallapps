@@ -276,7 +276,7 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
     """Convert a double-precision floating-point number from binary to decimal representation
 
     The decimal representation returnd by this function consists of: 
-    - the exact decimal value of the floating-point number
+    - the exact decimal value of the floating-point number (https://www.exploringbinary.com/number-of-decimal-digits-in-a-binary-fraction/)
     - the decimal value selected by Python as representative of the floating-point number
 
     Normally, the latter is shorter than the former, and it is the value returned by the function 'float()': it is the
@@ -467,11 +467,14 @@ def map_ndigit_decimal_to_fp(dec: Decimal, d: int):
     return (len(numbers), str(incr), sorted(numbers))
 
 
-def identify_range(x: float) -> List[Tuple[int, int]]:
+def identify_surrounding_powers_of_2_and_10(x: float) -> List[Tuple[int, int]]:
     """Given a float, calculate the nearest powers of 10 and 2 and return them in ascending order
 
     72057594037927956 -> [(10, 16), (2, 56), (10, 17), (2, 57)] that reads: 
     10^16 < 2^56 < 72057594037927956 < 10^17 < 2^57
+
+    https://www.exploringbinary.com/how-the-positive-powers-of-ten-and-two-are-interleaved/
+    https://www.exploringbinary.com/7-bits-are-not-enough-for-2-digit-accuracy/
     """
     previous_power_of_2 = floor(log2(x))
     previous_power_of_10 = floor(log10(x))
