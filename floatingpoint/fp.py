@@ -21,7 +21,7 @@ import struct
 from math import log2, log10, floor, isnan
 from functools import reduce, singledispatch
 from typing import List, Tuple, Generator
-from mpmath import mp, mpf, nstr
+from mpmath import mp, mpf
 from fputil import str_to_list, list_to_str
 
 mp.dps = 100
@@ -220,20 +220,28 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
     return (exact_decimal, float(exact_decimal), unbiased_exp)
 
 @singledispatch
-def segment_params(x) -> Tuple[int, str, str, str]:
+def segment_params(x, ctx: Context) -> Tuple[int, str, str, str]:
+    """See specific implementations for the different types of the argument: segment_params_int and segment_params_float
+
+    Calculate the parameters of a double-precision floating-point segment 
+    (the segment is determined differently depending on the type of the argument)
+
+    Return tuple with the values: 
+    - unbiased exponent of the segment
+    - minimum fp in the segment represented as an exact decimal
+    - maximum fp in the segment represented as an exact decimal
+    - distance between consecutive binary fp in the segment represented as an exact decimal
+    """
     raise NotImplementedError
 
 @segment_params.register
-def _(e: int) -> Tuple[int, str, str, str]:
+def segment_params_int(e: int, ctx: Context) -> Tuple[int, str, str, str]:
     """Calculate the parameters of the double-precision floating-point segment corresponding 
     to the unbiased exponent 'e'
 
-    Return tuple with the values: 
-    - echo of e
-    - minimum fp in the segment represented as an exact decimal
-    - maximum fp in the segment represented as an exact decimal
-    - distance between consecutive fp in the segment represented as a float
+    See base case 'segment_params' for more details
     """
+    setcontext(ctx)
     p = 52
     two = Decimal(2)
     min_val: Decimal = two**e
@@ -242,19 +250,16 @@ def _(e: int) -> Tuple[int, str, str, str]:
     return (e, str(min_val), str(max_val), str(distance))
 
 @segment_params.register
-def _(f: float) -> Tuple[int, str, str, str]:
+def segment_params_float(f: float, ctx: Context) -> Tuple[int, str, str, str]:
     """Calculate the parameters of the double-precision floating-point segment containing
     the given floating-point number 'f'
 
-    Return tuple with the values: 
-    - unbiased exponent of the segment
-    - minimum fp in the segment represented as an exact decimal
-    - maximum fp in the segment represented as an exact decimal
-    - distance between consecutive fp in the segment represented as a float
+    See base case 'segment_params' for more details
     """
+    setcontext(ctx)
     bits: str = from_decimal_to_binary(f)[0]
     unbiased_exp: int = unpack_double_precision_fp(str_to_list(bits))[3]
-    return segment_params(unbiased_exp)
+    return segment_params(unbiased_exp, ctx)
 
 def tabulate_esegments(start: int, end: int):
     """Pretty-print parameters of the segments corresponding to the given range [start, end-1]
@@ -424,7 +429,7 @@ if __name__ == "__main__":
     # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
     # print(identify_range(72057594037927956))
-    print(segment_params(9))
+    print(segment_params(1023.0, Context(prec=400, rounding=ROUND_HALF_EVEN)))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
     # fp_generator = fp_gen(72057594037927870)
     # print(next(fp_generator))

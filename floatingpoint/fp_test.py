@@ -2,7 +2,7 @@ from fp import *
 import pytest
 
 
-def test_next_binary_value_overflow(): # [missing-function-docstring]
+def test_next_binary_value_overflow():  # [missing-function-docstring]
     bits = [1, 1, 1]
     assert next_binary_value(bits)
 
@@ -150,8 +150,23 @@ def test_round_to_nearest_bool():
         (float('inf'), ('01111111100000000000000000000000', '0x7f800000')),
         (float('-inf'), ('11111111100000000000000000000000', '0xff800000')),
         (float('nan'), ('01111111100000000000000000000001', '0x7f800001'))
-    ]    
+    ]
 )
 def test_to_single_precision_floating_point_binary_manual(input, expected):
     assert to_single_precision_floating_point_binary_manual(input) == expected
 
+
+ctx = Context(prec=400, rounding=ROUND_HALF_EVEN)
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        ((9, ctx), (9, '512', '1023.99999999999988631316227838397026062011718750000000000', '1.136868377216160297393798828125E-13')),
+        ((52, ctx), (52, '4503599627370496', '9007199254740991.00000000000000000000000000000000000000000000000000000', '1')),
+        ((1023.0, ctx), (9, '512', '1023.99999999999988631316227838397026062011718750000000000', '1.136868377216160297393798828125E-13')),
+        ((4503599627370497.0, ctx), (52, '4503599627370496', '9007199254740991.00000000000000000000000000000000000000000000000000000', '1'))
+    ]
+)
+def test_segment_params(input, expected):     
+    result = segment_params(*input)
+    assert result == expected
+    
