@@ -1,5 +1,6 @@
 from typing import List
 
+
 def str_to_list(s: str) -> List[int]:
     """Convert a string made up of digits into a list of integers
 

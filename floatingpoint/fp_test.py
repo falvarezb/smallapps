@@ -143,7 +143,7 @@ def test_round_to_nearest_bool():
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    "data,expected",
     [
         (52.0, ('01000010010100000000000000000000', '0x42500000')),
         (-52.0, ('11000010010100000000000000000000', '0xc2500000')),
@@ -153,11 +153,13 @@ def test_round_to_nearest_bool():
         (float('nan'), ('01111111100000000000000000000001', '0x7f800001'))
     ]
 )
-def test_to_single_precision_floating_point_binary_manual(input, expected):
-    assert to_single_precision_floating_point_binary_manual(input) == expected
+def test_to_single_precision_floating_point_binary_manual(data, expected):
+    assert to_single_precision_floating_point_binary_manual(data) == expected
 
 
 ctx = Context(prec=100, rounding=ROUND_HALF_UP)
+
+
 @pytest.mark.parametrize(
     "data,expected",
     [
@@ -167,5 +169,5 @@ ctx = Context(prec=100, rounding=ROUND_HALF_UP)
         ((4503599627370497.0, ctx), (52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1')))
     ]
 )
-def test_segment_params(data, expected):    
+def test_segment_params(data, expected):
     assert segment_params(*data) == expected

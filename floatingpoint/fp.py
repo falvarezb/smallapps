@@ -207,7 +207,7 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
 
     Returns:
         tuple[Decimal, float, int]: exact decimal representation, Python's 'float' representation and unbiased exponent of the binary format
-    """    
+    """
     sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
     check_infinity_or_nan(fraction_bits, exponent_bits)
 
@@ -264,11 +264,11 @@ def segment_params_float(f: float, ctx: Context) -> Tuple[int, Decimal, Decimal,
 def tabulate_esegments(start: int, end: int):
     """Pretty-print parameters of the segments corresponding to the given range [start, end-1]
     """
-    segments = [segment_params(e) for e in range(start, end)]
+    segments = [segment_params(e, Context(prec=400, rounding=ROUND_HALF_UP)) for e in range(start, end)]
     max_e = 5
-    max_min = max([len(segment[1]) for segment in segments])
-    max_max = max([len(segment[2]) for segment in segments])
-    max_distance = max([len(segment[3]) for segment in segments])
+    max_min = max([len(str(segment[1])) for segment in segments])
+    max_max = max([len(str(segment[2])) for segment in segments])
+    max_distance = max([len(str(segment[3])) for segment in segments])
 
     header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-len('distance') if len('distance') < max_distance else 1}}|"
     row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 12)}|"
@@ -347,7 +347,7 @@ def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
         exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
 
-def next_n_binary_fp(seed: float, n: int) -> List[Tuple[float, mpf, int]]:
+def next_n_binary_fp(seed: float, n: int) -> list[Tuple[Decimal, float, int]]:
     """Convenience function to return the next n double-precision floating-point numbers in ascending order
 
     See next_binary_fp() for more details
@@ -380,12 +380,12 @@ def map_ndigit_decimal_to_fp(dec: Decimal, d: int):
 
     numbers = []
     # checking d-digit numbers smaller than the given number
-    while (float(lower_d_digit_number) == fp):
+    while float(lower_d_digit_number) == fp:
         numbers.append(lower_d_digit_number)
         lower_d_digit_number -= incr
 
     # checking d-digit numbers greater than the given number
-    while (float(upper_d_digit_number) == fp):
+    while float(upper_d_digit_number) == fp:
         numbers.append(upper_d_digit_number)
         upper_d_digit_number += incr
 
