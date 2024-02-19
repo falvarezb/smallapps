@@ -21,10 +21,8 @@ import struct
 from math import log2, log10, floor, isnan
 from functools import reduce, singledispatch
 from typing import List, Tuple, Generator
-from mpmath import mp, mpf
 from fputil import str_to_list, list_to_str, next_binary_value
 
-mp.dps = 100
 setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
 
@@ -390,26 +388,37 @@ def identify_surrounding_powers_of_2_and_10(x: float) -> List[Tuple[int, int]]:
     return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key=lambda x: x[0]**x[1])
 
 
-# def explore_segment(start: Decimal, end: Decimal, d: int) -> bool:
-#     """Explore the precision of the segment [start, end] with the given precision
+def explore_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
+    """Explore the precision of the segment [start, end] with the given precision
 
-#     Return True if the segment has the expected precision, False otherwise
-#     """
+    Return True if the segment has the expected precision, False otherwise
+    """
+    generator = fp_gen(float(start))
+    current_fp: Tuple[Decimal, float, int] = next(generator)
+    num_mapped_decimals = map_ndigit_decimal_to_fp(current_fp[0], d)[0]
+    while num_mapped_decimals < 2 and current_fp[0] < end:
+        current_fp = next(generator)
+        num_mapped_decimals = map_ndigit_decimal_to_fp(current_fp[0], d)[0]
+
+    if num_mapped_decimals < 2:
+        return True
     
+    print(f"more than one num_mapped_decimals for {current_fp[0].normalize()}")
+    return False
+    
+
+# def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
+#     current_mpf = start
+#     current_exact_decimal = mpf(float(current_mpf))
+
+#     while current_mpf < end:
+#         previous_exact_decimal = current_exact_decimal
+#         current_mpf = current_mpf + precision
+#         current_exact_decimal = mpf(float(current_mpf))
+#         if previous_exact_decimal == current_exact_decimal:
+#             return False
+#         print(current_mpf / end)
 #     return True
-
-def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
-    current_mpf = start
-    current_exact_decimal = mpf(float(current_mpf))
-
-    while current_mpf < end:
-        previous_exact_decimal = current_exact_decimal
-        current_mpf = current_mpf + precision
-        current_exact_decimal = mpf(float(current_mpf))
-        if previous_exact_decimal == current_exact_decimal:
-            return False
-        print(current_mpf / end)
-    return True
 
 
 if __name__ == "__main__":
@@ -419,7 +428,7 @@ if __name__ == "__main__":
     # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
     # print(identify_range(72057594037927956))
-    print(segment_params(9, Context(prec=100, rounding=ROUND_HALF_UP)))
+    # print(segment_params(9, Context(prec=100, rounding=ROUND_HALF_UP)))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
     # fp_generator = fp_gen(72057594037927870)
     # print(next(fp_generator))
@@ -441,3 +450,4 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
+    print(explore_segment(Decimal(72057594037927945), Decimal(72057594037927956), 17))
