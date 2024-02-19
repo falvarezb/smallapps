@@ -16,7 +16,7 @@ the Python prompt and built-in repr() function would choose the one with 17 sign
 Starting with Python 3.1, Python (on most systems) is now able to choose the shortest of these and simply display 0.1.
 """
 
-from decimal import Decimal, setcontext, Context, ROUND_HALF_EVEN
+from decimal import ROUND_HALF_UP, Decimal, setcontext, Context
 import struct
 from math import log2, log10, floor, isnan
 from functools import reduce, singledispatch
@@ -25,7 +25,7 @@ from mpmath import mp, mpf
 from fputil import str_to_list, list_to_str
 
 mp.dps = 100
-setcontext(Context(prec=400, rounding=ROUND_HALF_EVEN))
+setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
@@ -220,7 +220,7 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
     return (exact_decimal, float(exact_decimal), unbiased_exp)
 
 @singledispatch
-def segment_params(x, ctx: Context) -> Tuple[int, str, str, str]:
+def segment_params(x, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
     """See specific implementations for the different types of the argument: segment_params_int and segment_params_float
 
     Calculate the parameters of a double-precision floating-point segment 
@@ -235,7 +235,7 @@ def segment_params(x, ctx: Context) -> Tuple[int, str, str, str]:
     raise NotImplementedError
 
 @segment_params.register
-def segment_params_int(e: int, ctx: Context) -> Tuple[int, str, str, str]:
+def segment_params_int(e: int, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
     """Calculate the parameters of the double-precision floating-point segment corresponding 
     to the unbiased exponent 'e'
 
@@ -247,10 +247,10 @@ def segment_params_int(e: int, ctx: Context) -> Tuple[int, str, str, str]:
     min_val: Decimal = two**e
     max_val: Decimal = two**(e + 1) * (1 - two**(-p - 1))
     distance: Decimal = two**(e - p)
-    return (e, str(min_val), str(max_val), str(distance))
+    return (e, min_val.normalize(), max_val.normalize(), distance.normalize())
 
 @segment_params.register
-def segment_params_float(f: float, ctx: Context) -> Tuple[int, str, str, str]:
+def segment_params_float(f: float, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
     """Calculate the parameters of the double-precision floating-point segment containing
     the given floating-point number 'f'
 
@@ -429,7 +429,7 @@ if __name__ == "__main__":
     # print(double_precision_significant_digits("72057594037927956"))
     # print(identify_range(1023.999999999999887))
     # print(identify_range(72057594037927956))
-    print(segment_params(1023.0, Context(prec=400, rounding=ROUND_HALF_EVEN)))
+    print(segment_params(9, Context(prec=100, rounding=ROUND_HALF_UP)))
     # print(explore_segment_precision(mpf(1023), mpf(1024), mpf(1e-18)))
     # fp_generator = fp_gen(72057594037927870)
     # print(next(fp_generator))

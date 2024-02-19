@@ -1,5 +1,5 @@
-from fp import *
 import pytest
+from fp import *
 
 
 def test_next_binary_value_overflow():  # [missing-function-docstring]
@@ -98,6 +98,7 @@ def test_fp_gen_infinity():
     except OverflowError as e:
         assert e.args[0] == "Infinity"
 
+
 def test_round_to_nearest():
     # no actual rounding, all digits are kept
     assert round_to_nearest([1, 1, 1, 0, 0, 1], 6) == [1, 1, 1, 0, 0, 1]
@@ -156,17 +157,15 @@ def test_to_single_precision_floating_point_binary_manual(input, expected):
     assert to_single_precision_floating_point_binary_manual(input) == expected
 
 
-ctx = Context(prec=400, rounding=ROUND_HALF_EVEN)
+ctx = Context(prec=100, rounding=ROUND_HALF_UP)
 @pytest.mark.parametrize(
-    "input,expected",
+    "data,expected",
     [
-        ((9, ctx), (9, '512', '1023.99999999999988631316227838397026062011718750000000000', '1.136868377216160297393798828125E-13')),
-        ((52, ctx), (52, '4503599627370496', '9007199254740991.00000000000000000000000000000000000000000000000000000', '1')),
-        ((1023.0, ctx), (9, '512', '1023.99999999999988631316227838397026062011718750000000000', '1.136868377216160297393798828125E-13')),
-        ((4503599627370497.0, ctx), (52, '4503599627370496', '9007199254740991.00000000000000000000000000000000000000000000000000000', '1'))
+        ((9, ctx), (9, Decimal('512'), Decimal('1023.9999999999998863131622783839702606201171875'), Decimal('1.136868377216160297393798828125E-13'))),
+        ((52, ctx), (52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1'))),
+        ((1023.0, ctx), (9, Decimal('512'), Decimal('1023.9999999999998863131622783839702606201171875'), Decimal('1.136868377216160297393798828125E-13'))),
+        ((4503599627370497.0, ctx), (52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1')))
     ]
 )
-def test_segment_params(input, expected):     
-    result = segment_params(*input)
-    assert result == expected
-    
+def test_segment_params(data, expected):    
+    assert segment_params(*data) == expected
