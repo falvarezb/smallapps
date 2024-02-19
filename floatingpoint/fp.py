@@ -22,7 +22,7 @@ from math import log2, log10, floor, isnan
 from functools import reduce, singledispatch
 from typing import List, Tuple, Generator
 from mpmath import mp, mpf
-from fputil import str_to_list, list_to_str
+from fputil import str_to_list, list_to_str, next_binary_value
 
 mp.dps = 100
 setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
@@ -283,24 +283,6 @@ def tabulate_esegments(start: int, end: int):
     print('\n')
 
 
-def next_binary_value(bits) -> bool:
-    """Add 1 to the given bit pattern 'bits', assuming bits[0] is the MSB (most-significant bit)
-
-    The argument is modified in place.
-    Returns a boolean to indicate whether there has been overflow (True) or not (False)
-    """
-    i = len(bits) - 1
-    while i >= 0 and bits[i] == 1:
-        bits[i] = 0
-        i -= 1
-    if i >= 0:
-        bits[i] = 1
-        return False
-
-    # overflow
-    return True
-
-
 def next_binary_fp(bits: List[int]) -> List[int]:
     """Return the binary representation of the next double-precision floating-point number
 
@@ -407,6 +389,14 @@ def identify_surrounding_powers_of_2_and_10(x: float) -> List[Tuple[int, int]]:
     next_power_of_10 = previous_power_of_10 + 1
     return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key=lambda x: x[0]**x[1])
 
+
+# def explore_segment(start: Decimal, end: Decimal, d: int) -> bool:
+#     """Explore the precision of the segment [start, end] with the given precision
+
+#     Return True if the segment has the expected precision, False otherwise
+#     """
+    
+#     return True
 
 def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
     current_mpf = start
