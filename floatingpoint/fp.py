@@ -51,18 +51,17 @@ class FP:
         """Return a FP object from the given Decimal number
         """
         bits = from_decimal_to_binary(float(dec))[0]
-        return FP.from_binary(str_to_list(bits))
-        
+        return FP.from_binary(bits)
 
     @staticmethod
     def from_float(f: float) -> "FP":
         """Return a FP object from the given float number
         """
         bits = from_decimal_to_binary(f)[0]
-        return FP.from_binary(str_to_list(bits))
+        return FP.from_binary(bits)
 
     @staticmethod
-    def from_binary(bits: List[int]) -> "FP":
+    def from_binary(bits: str) -> "FP":
         """Return a FP from the given binary representation
 
         The decimal representation returned by this function consists of: 
@@ -81,7 +80,7 @@ class FP:
             place_value = fraction_bits[i - 1] * half**i
             mantissa += place_value
         exact_decimal = sign * mantissa * Decimal(2)**unbiased_exp
-        return FP(float(exact_decimal), list_to_str(bits), exact_decimal, unbiased_exp)
+        return FP(float(exact_decimal), bits, exact_decimal, unbiased_exp)
 
 
 class Segment:
@@ -105,7 +104,7 @@ class Segment:
         return self.unbiased_exp == other.unbiased_exp and self.min_val == other.min_val and self.max_val == other.max_val and self.distance == other.distance
 
 
-def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
+def unpack_double_precision_fp(bits: str) -> Tuple[int, List[int], List[int], int]:
     """Decompose the binary representation of a double-precision floating-point number 
     into its elements: 
     - sign
@@ -114,12 +113,12 @@ def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[in
     - unbiased exponent
     """
     exponent_bits = bits[1:12]
-    biased_exp = int(list_to_str(exponent_bits), 2)
+    biased_exp = int(exponent_bits, 2)
     double_precision_exponent_bias = 1023
     unbiased_exp = biased_exp - double_precision_exponent_bias
     fraction_bits = bits[12:]
-    sign = 1 if bits[0] == 0 else -1
-    return (sign, fraction_bits, exponent_bits, unbiased_exp)
+    sign = 1 if bits[0] == '0' else -1
+    return (sign, str_to_list(fraction_bits), str_to_list(exponent_bits), unbiased_exp)
 
 
 def check_infinity_or_nan(fraction: List[int], exponent: List[int]) -> None:
@@ -185,7 +184,7 @@ def segment_params_float(f: float, ctx: Context) -> Segment:
     """
     setcontext(ctx)
     bits: str = from_decimal_to_binary(f)[0]
-    unbiased_exp: int = unpack_double_precision_fp(str_to_list(bits))[3]
+    unbiased_exp: int = unpack_double_precision_fp(bits)[3]
     return segment_params(unbiased_exp, ctx)
 
 
@@ -211,21 +210,21 @@ def tabulate_esegments(start: int, end: int):
     print('\n')
 
 
-def next_binary_fp(bits: List[int]) -> List[int]:
+def next_binary_fp(strbits: str):
     """Return the binary representation of the next double-precision floating-point number
 
     Raise OverflowError if the argument or the resulting value is either 'Infinity' or 'NaN'
 
     Args:
-        bits (list[int]): bit pattern of the original double-precision floating-point number
+        strbits (str): bit pattern of the original double-precision floating-point number
 
     Returns:
         list[int]: bit pattern of the next double-precision floating-point number
     """
-    bits = bits.copy()
-    _, fraction_bits, exponent_bits, _ = unpack_double_precision_fp(bits)
+    _, fraction_bits, exponent_bits, _ = unpack_double_precision_fp(strbits)
     check_infinity_or_nan(fraction_bits, exponent_bits)
 
+    bits = str_to_list(strbits)
     if next_binary_value(fraction_bits):
         # overflow in fraction, increase exponent
         next_binary_value(exponent_bits)
@@ -233,7 +232,7 @@ def next_binary_fp(bits: List[int]) -> List[int]:
 
     bits[12:] = fraction_bits
     bits[1:12] = exponent_bits
-    return bits
+    return "".join([str(e) for e in bits])
 
 
 def fp_gen(seed: float) -> Generator[FP, None, None]:
@@ -252,7 +251,6 @@ def fp_gen(seed: float) -> Generator[FP, None, None]:
     assert seed >= 0, "seed must be positive or zero"
 
     bits = from_decimal_to_binary(seed)[0]
-    bits = str_to_list(bits)
     fp = FP.from_binary(bits)
 
     while True:

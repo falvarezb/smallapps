@@ -15,25 +15,23 @@ def test_next_binary_value_success():
 
 
 def test_next_binary_fp_increase_fraction():
-    bits = str_to_list(
-        "0011111111110011001100110011001100110011001100110011001100110011")
+    bits = \
+        "0011111111110011001100110011001100110011001100110011001100110011"
     bits = next_binary_fp(bits)
-    assert list_to_str(
-        bits) == "0011111111110011001100110011001100110011001100110011001100110100"
+    assert bits == "0011111111110011001100110011001100110011001100110011001100110100"
 
 
 def test_next_binary_fp_increase_exponent():
-    bits = str_to_list(
-        "0011111111111111111111111111111111111111111111111111111111111111")
+    bits = \
+        "0011111111111111111111111111111111111111111111111111111111111111"
     bits = next_binary_fp(bits)
-    assert list_to_str(
-        bits) == "0100000000000000000000000000000000000000000000000000000000000000"
+    assert bits == "0100000000000000000000000000000000000000000000000000000000000000"
 
 
 def test_next_binary_fp_argument_overflow():
     try:
-        bits = str_to_list(
-            "0111111111110011001100110011001100110011001100110011001100110011")
+        bits = \
+            "0111111111110011001100110011001100110011001100110011001100110011"
         bits = next_binary_fp(bits)
         assert False
     except OverflowError as e:
@@ -42,8 +40,8 @@ def test_next_binary_fp_argument_overflow():
 
 def test_next_binary_fp_result_overflow():
     try:
-        bits = str_to_list(
-            "0111111111101111111111111111111111111111111111111111111111111111")
+        bits = \
+            "0111111111101111111111111111111111111111111111111111111111111111"
         bits = next_binary_fp(bits)
         assert False
     except OverflowError as e:
@@ -52,20 +50,20 @@ def test_next_binary_fp_result_overflow():
 
 def test_to_exact_decimal_positive():
     bits = "0011111111110011001100110011001100110011001100110011001100110011"
-    assert FP.from_binary(str_to_list(bits)) == FP(1.2, bits, Decimal(
+    assert FP.from_binary(bits) == FP(1.2, bits, Decimal(
         '1.1999999999999999555910790149937383830547332763671875'), 0)
 
 
 def test_to_exact_decimal_negative():
     bits = "1011111111110011001100110011001100110011001100110011001100110011"
-    assert FP.from_binary(str_to_list(bits)) == FP(-1.2, bits, Decimal(
+    assert FP.from_binary(bits) == FP(-1.2, bits, Decimal(
         '-1.1999999999999999555910790149937383830547332763671875'), 0)
 
 
 def test_to_exact_decimal_nan():
     try:
         bits = "1111111111110011001100110011001100110011001100110011001100110011"
-        FP.from_binary(str_to_list(bits))
+        FP.from_binary(bits)
         assert False
     except OverflowError as e:
         assert e.args[0] == "NaN"
@@ -74,7 +72,7 @@ def test_to_exact_decimal_nan():
 def test_to_exact_decimal_infinity():
     try:
         bits = "1111111111110000000000000000000000000000000000000000000000000000"
-        FP.from_binary(str_to_list(bits))
+        FP.from_binary(bits)
         assert False
     except OverflowError as e:
         assert e.args[0] == "Infinity"
