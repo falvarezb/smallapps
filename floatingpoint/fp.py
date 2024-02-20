@@ -21,7 +21,7 @@ import struct
 from math import log2, log10, floor
 from functools import reduce, singledispatch
 from typing import List, Tuple, Generator
-from fputil import str_to_list, list_to_str, next_binary_value
+from fputil import str_to_list, next_binary_value
 
 setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
@@ -45,6 +45,11 @@ class FP:
 
     def __eq__(self, other):
         return self.fp == other.fp and self.bits == other.bits and self.exact_decimal == other.exact_decimal and self.unbiased_exp == other.unbiased_exp
+
+    def next(self) -> "FP":
+        """Return the next double-precision floating-point number
+        """
+        return FP.from_binary(next_binary_fp(self.bits))
 
     @staticmethod
     def from_decimal(dec: Decimal) -> "FP":
@@ -147,6 +152,7 @@ def from_decimal_to_binary(number: float) -> Tuple[str, str]:
     hexrepr = hex(int(bits, 2))
     return (bits, hexrepr)
 
+
 @singledispatch
 def segment_params(x, ctx: Context) -> Segment:
     """See specific implementations for the different types of the argument: segment_params_int and segment_params_float
@@ -235,7 +241,7 @@ def next_binary_fp(strbits: str):
     return "".join([str(e) for e in bits])
 
 
-def fp_gen(seed: float) -> Generator[FP, None, None]:
+def fp_gen(fp: FP) -> Generator[FP, None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
     The numbers are generated in ascending order by incrementing the binary representation of 
@@ -248,15 +254,10 @@ def fp_gen(seed: float) -> Generator[FP, None, None]:
     Yields:
         FP: double-precision floating-point number
     """
-    assert seed >= 0, "seed must be positive or zero"
-
-    bits = from_decimal_to_binary(seed)[0]
-    fp = FP.from_binary(bits)
-
+    assert fp.fp >= 0, "seed must be positive or zero"
     while True:
         yield fp
-        bits = next_binary_fp(bits)
-        fp = FP.from_binary(bits)
+        fp = fp.next()
 
 
 def next_n_binary_fp(seed: float, n: int) -> list[FP]:
@@ -332,7 +333,7 @@ def is_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
     The precision of the segment is 'd' digits if each d-digit number in the segment maps to
     a different double-precision floating-point number
     """
-    generator = fp_gen(float(start))
+    generator = fp_gen(FP.from_decimal(start))
     current_fp: FP = next(generator)
     num_mapped_decimals = map_ndigit_decimals_to_fp(current_fp, d)[0]
     while num_mapped_decimals < 2 and current_fp.exact_decimal < end:
