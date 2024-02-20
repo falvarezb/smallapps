@@ -28,9 +28,9 @@ setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
 class FP:
     """Class representing a double-precision floating-point number, with the following attributes:
-    - fp: the floating-point number representation as a Python 'float'
+    - fp: the decimal value selected by Python as representative of the floating-point number
     - bits: the binary representation of the floating-point number
-    - exact_decimal: the exact decimal representation of the floating-point number
+    - exact_decimal: the exact decimal representation of the floating-point number (https://www.exploringbinary.com/number-of-decimal-digits-in-a-binary-fraction/)
     - unbiased_exp: the unbiased exponent of the floating-point number
     """
 
@@ -51,16 +51,37 @@ class FP:
         """Return a FP object from the given Decimal number
         """
         bits = from_decimal_to_binary(float(dec))[0]
-        exact_decimal, _, unbiased_exp = from_binary_to_decimal(str_to_list(bits))
-        return FP(float(dec), bits, exact_decimal, unbiased_exp)
-    
+        return FP.from_binary(str_to_list(bits))
+        
+
     @staticmethod
     def from_float(f: float) -> "FP":
         """Return a FP object from the given float number
         """
         bits = from_decimal_to_binary(f)[0]
-        exact_decimal, _, unbiased_exp = from_binary_to_decimal(str_to_list(bits))
-        return FP(f, bits, exact_decimal, unbiased_exp)
+        return FP.from_binary(str_to_list(bits))
+
+    @staticmethod
+    def from_binary(bits: List[int]) -> "FP":
+        """Return a FP from the given binary representation
+
+        The decimal representation returned by this function consists of: 
+        - the exact decimal value of the floating-point number (https://www.exploringbinary.com/number-of-decimal-digits-in-a-binary-fraction/)
+        - the decimal value selected by Python as representative of the floating-point number
+
+        Normally, the latter is shorter than the former, and it is the value returned by the function 'float()': it is the
+        decimal number with the maximum number of digits (around 16) needed to uniquely distinguish that value from the adjacent values        
+        """
+        sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
+        check_infinity_or_nan(fraction_bits, exponent_bits)
+
+        half = Decimal(0.5)
+        mantissa = Decimal(1)
+        for i in range(1, len(fraction_bits) + 1):
+            place_value = fraction_bits[i - 1] * half**i
+            mantissa += place_value
+        exact_decimal = sign * mantissa * Decimal(2)**unbiased_exp
+        return FP(float(exact_decimal), list_to_str(bits), exact_decimal, unbiased_exp)
 
 
 class Segment:
@@ -248,34 +269,6 @@ def to_single_precision_floating_point_binary_manual(decimal: float) -> Tuple[st
     return (bits, hex(int(bits, 2)))
 
 
-def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
-    """Convert a double-precision floating-point number from binary to decimal representation
-
-    The decimal representation returnd by this function consists of: 
-    - the exact decimal value of the floating-point number (https://www.exploringbinary.com/number-of-decimal-digits-in-a-binary-fraction/)
-    - the decimal value selected by Python as representative of the floating-point number
-
-    Normally, the latter is shorter than the former, and it is the value returned by the function 'float()': it is the
-    decimal number with the maximum number of digits (around 16) needed to uniquely distinguish that value from the adjacent values
-
-    Args:
-        bits (list[int]): binary representation of the double-precision floating-point number
-
-    Returns:
-        tuple[Decimal, float, int]: exact decimal representation, Python's 'float' representation and unbiased exponent of the binary format
-    """
-    sign, fraction_bits, exponent_bits, unbiased_exp = unpack_double_precision_fp(bits)
-    check_infinity_or_nan(fraction_bits, exponent_bits)
-
-    half = Decimal(0.5)
-    mantissa = Decimal(1)
-    for i in range(1, len(fraction_bits) + 1):
-        place_value = fraction_bits[i - 1] * half**i
-        mantissa += place_value
-    exact_decimal = sign * mantissa * Decimal(2)**unbiased_exp
-    return (exact_decimal, float(exact_decimal), unbiased_exp)
-
-
 @singledispatch
 def segment_params(x, ctx: Context) -> Segment:
     """See specific implementations for the different types of the argument: segment_params_int and segment_params_float
@@ -381,12 +374,12 @@ def fp_gen(seed: float) -> Generator[FP, None, None]:
 
     bits = from_decimal_to_binary(seed)[0]
     bits = str_to_list(bits)
-    exact_decimal, decimal, exp = from_binary_to_decimal(bits)
+    fp = FP.from_binary(bits)
 
     while True:
-        yield FP(decimal, list_to_str(bits), exact_decimal, exp)
+        yield fp
         bits = next_binary_fp(bits)
-        exact_decimal, decimal, exp = from_binary_to_decimal(bits)
+        fp = FP.from_binary(bits)
 
 
 def next_n_binary_fp(seed: float, n: int) -> list[FP]:
