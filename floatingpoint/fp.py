@@ -25,6 +25,24 @@ from fputil import str_to_list, list_to_str, next_binary_value
 
 setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
+# class representing floating-point number, with the following attributes:
+# float: the floating-point number
+# bits: the binary representation of the floating-point number
+# exact_decimal: the exact decimal representation of the floating-point number
+# unbiased_exp: the unbiased exponent of the floating-point number
+class FP:
+    def __init__(self, fp: float, bits: str, exact_decimal: Decimal, unbiased_exp: int):
+        self.fp = fp
+        self.bits = bits
+        self.exact_decimal = exact_decimal
+        self.unbiased_exp = unbiased_exp
+
+    def __repr__(self):
+        return f"FP(float={self.fp}, bits={self.bits}, exact_decimal={self.exact_decimal}, unbiased_exp={self.unbiased_exp})"
+    
+    def __eq__(self, other):
+        return self.fp == other.fp and self.bits == other.bits and self.exact_decimal == other.exact_decimal and self.unbiased_exp == other.unbiased_exp
+
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
     """Decompose the binary representation of a double-precision floating-point number 
@@ -306,14 +324,18 @@ def next_binary_fp(bits: List[int]) -> List[int]:
     return bits
 
 
-def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
+def fp_gen(seed: float) -> Generator[FP, None, None]:
     """Return a generator of double-precision floating-point numbers as defined by IEEE 754.
 
     The numbers are generated in ascending order by incrementing the binary representation of 
-    the given seed one at a time. In case of reaching the values "Infinity" or "NaN", the generator
+    the given seed one unit at a time. In case of reaching the values "Infinity" or "NaN", the generator
     throws an OverflowError.
 
-    The format of the generated numbers is the one corresponding to the function 'from_binary_to_decimal'
+    Args:
+        seed (float): initial floating-point number
+
+    Yields:
+        FP: double-precision floating-point number
     """
     assert seed >= 0, "seed must be positive or zero"
 
@@ -322,7 +344,7 @@ def fp_gen(seed: float) -> Generator[Tuple[Decimal, float, int], None, None]:
     exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
     while True:
-        yield (exact_decimal, decimal, exp)
+        yield FP(decimal, list_to_str(bits), exact_decimal, exp)
         bits = next_binary_fp(bits)
         exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
