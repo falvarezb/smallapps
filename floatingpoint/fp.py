@@ -394,8 +394,15 @@ def next_n_binary_fp(seed: float, n: int) -> list[FP]:
 
 def map_ndigit_decimals_to_fp(fp: FP, d: int):
     """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
-
     The list is ordered in ascending order
+
+    Args:
+        fp (FP): double-precision floating-point number
+        d (int): number of significant digits to be considered
+
+    Returns:
+        tuple[int, Decimal, list[Decimal]]: number of d-digit decimal numbers that map to the given double-precision floating-point number, 
+        the distance between consecutive d-digit numbers, and the list of numbers
     """
     _, digits, exp = fp.exact_decimal.normalize().as_tuple()
     match exp:
@@ -423,7 +430,7 @@ def map_ndigit_decimals_to_fp(fp: FP, d: int):
         numbers.append(upper_d_digit_number)
         upper_d_digit_number += incr
 
-    return (len(numbers), str(incr), sorted(numbers))
+    return (len(numbers), incr, sorted(numbers))
 
 
 def identify_surrounding_powers_of_2_and_10(x: float) -> List[Tuple[int, int]]:
