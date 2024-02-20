@@ -25,12 +25,15 @@ from fputil import str_to_list, list_to_str, next_binary_value
 
 setcontext(Context(prec=400, rounding=ROUND_HALF_UP))
 
-# class representing floating-point number, with the following attributes:
-# float: the floating-point number
-# bits: the binary representation of the floating-point number
-# exact_decimal: the exact decimal representation of the floating-point number
-# unbiased_exp: the unbiased exponent of the floating-point number
+
 class FP:
+    """Class representing a double-precision floating-point number, with the following attributes:
+    - fp: the floating-point number representation as a Python 'float'
+    - bits: the binary representation of the floating-point number
+    - exact_decimal: the exact decimal representation of the floating-point number
+    - unbiased_exp: the unbiased exponent of the floating-point number
+    """
+
     def __init__(self, fp: float, bits: str, exact_decimal: Decimal, unbiased_exp: int):
         self.fp = fp
         self.bits = bits
@@ -39,9 +42,46 @@ class FP:
 
     def __repr__(self):
         return f"FP(float={self.fp}, bits={self.bits}, exact_decimal={self.exact_decimal}, unbiased_exp={self.unbiased_exp})"
-    
+
     def __eq__(self, other):
         return self.fp == other.fp and self.bits == other.bits and self.exact_decimal == other.exact_decimal and self.unbiased_exp == other.unbiased_exp
+
+    @staticmethod
+    def from_decimal(dec: Decimal) -> "FP":
+        """Return a FP object from the given Decimal number
+        """
+        bits = from_decimal_to_binary(float(dec))[0]
+        exact_decimal, _, unbiased_exp = from_binary_to_decimal(str_to_list(bits))
+        return FP(float(dec), bits, exact_decimal, unbiased_exp)
+    
+    @staticmethod
+    def from_float(f: float) -> "FP":
+        """Return a FP object from the given float number
+        """
+        bits = from_decimal_to_binary(f)[0]
+        exact_decimal, _, unbiased_exp = from_binary_to_decimal(str_to_list(bits))
+        return FP(f, bits, exact_decimal, unbiased_exp)
+
+
+class Segment:
+    """Class representing a segment of double-precision floating-point numbers, with the following attributes:
+    - unbiased_exp: the unbiased exponent that defines the segment
+    - min_val: the minimum floating-point number in the segment represented as an exact decimal
+    - max_val: the maximum floating-point number in the segment represented as an exact decimal
+    - distance: the distance between consecutive binary floating-point numbers in the segment represented as an exact decimal
+    """
+
+    def __init__(self, unbiased_exp: int, min_val: Decimal, max_val: Decimal, distance: Decimal) -> None:
+        self.unbiased_exp = unbiased_exp
+        self.min_val = min_val
+        self.max_val = max_val
+        self.distance = distance
+
+    def __repr__(self):
+        return f"Segment(unbiased_exp={self.unbiased_exp}, min_val={self.min_val}, max_val={self.max_val}, distance={self.distance})"
+
+    def __eq__(self, other):
+        return self.unbiased_exp == other.unbiased_exp and self.min_val == other.min_val and self.max_val == other.max_val and self.distance == other.distance
 
 
 def unpack_double_precision_fp(bits: List[int]) -> Tuple[int, List[int], List[int], int]:
@@ -235,23 +275,21 @@ def from_binary_to_decimal(bits: List[int]) -> Tuple[Decimal, float, int]:
     exact_decimal = sign * mantissa * Decimal(2)**unbiased_exp
     return (exact_decimal, float(exact_decimal), unbiased_exp)
 
+
 @singledispatch
-def segment_params(x, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
+def segment_params(x, ctx: Context) -> Segment:
     """See specific implementations for the different types of the argument: segment_params_int and segment_params_float
 
     Calculate the parameters of a double-precision floating-point segment 
     (the segment is determined differently depending on the type of the argument)
 
-    Return tuple with the values: 
-    - unbiased exponent of the segment
-    - minimum fp in the segment represented as an exact decimal
-    - maximum fp in the segment represented as an exact decimal
-    - distance between consecutive binary fp in the segment represented as an exact decimal
+    Return an object of type Segment
     """
     raise NotImplementedError
 
+
 @segment_params.register
-def segment_params_int(e: int, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
+def segment_params_int(e: int, ctx: Context) -> Segment:
     """Calculate the parameters of the double-precision floating-point segment corresponding 
     to the unbiased exponent 'e'
 
@@ -263,10 +301,11 @@ def segment_params_int(e: int, ctx: Context) -> Tuple[int, Decimal, Decimal, Dec
     min_val: Decimal = two**e
     max_val: Decimal = two**(e + 1) * (1 - two**(-p - 1))
     distance: Decimal = two**(e - p)
-    return (e, min_val.normalize(), max_val.normalize(), distance.normalize())
+    return Segment(e, min_val.normalize(), max_val.normalize(), distance.normalize())
+
 
 @segment_params.register
-def segment_params_float(f: float, ctx: Context) -> Tuple[int, Decimal, Decimal, Decimal]:
+def segment_params_float(f: float, ctx: Context) -> Segment:
     """Calculate the parameters of the double-precision floating-point segment containing
     the given floating-point number 'f'
 
@@ -277,14 +316,15 @@ def segment_params_float(f: float, ctx: Context) -> Tuple[int, Decimal, Decimal,
     unbiased_exp: int = unpack_double_precision_fp(str_to_list(bits))[3]
     return segment_params(unbiased_exp, ctx)
 
+
 def tabulate_esegments(start: int, end: int):
     """Pretty-print parameters of the segments corresponding to the given range [start, end-1]
     """
     segments = [segment_params(e, Context(prec=400, rounding=ROUND_HALF_UP)) for e in range(start, end)]
     max_e = 5
-    max_min = max([len(str(segment[1])) for segment in segments])
-    max_max = max([len(str(segment[2])) for segment in segments])
-    max_distance = max([len(str(segment[3])) for segment in segments])
+    max_min = max([len(str(segment.min_val)) for segment in segments])
+    max_max = max([len(str(segment.max_val)) for segment in segments])
+    max_distance = max([len(str(segment.distance)) for segment in segments])
 
     header = f"| e{'':{max_e-1}}| min{'':{max_min-3}}| max{'':{max_max-3}}| distance{'':{max_distance-len('distance') if len('distance') < max_distance else 1}}|"
     row_separator = f"|{'-' * (max_e + max_min + max_max + max_distance + 12)}|"
@@ -349,7 +389,7 @@ def fp_gen(seed: float) -> Generator[FP, None, None]:
         exact_decimal, decimal, exp = from_binary_to_decimal(bits)
 
 
-def next_n_binary_fp(seed: float, n: int) -> list[Tuple[Decimal, float, int]]:
+def next_n_binary_fp(seed: float, n: int) -> list[FP]:
     """Convenience function to return the next n double-precision floating-point numbers in ascending order
 
     See next_binary_fp() for more details
@@ -359,13 +399,12 @@ def next_n_binary_fp(seed: float, n: int) -> list[Tuple[Decimal, float, int]]:
     return [next(fp_generator) for _ in range(n)]
 
 
-def map_ndigit_decimal_to_fp(dec: Decimal, d: int):
+def map_ndigit_decimals_to_fp(fp: FP, d: int):
     """Return the list of d-digit decimal numbers that map to the given double-precision floating-point number
 
     The list is ordered in ascending order
     """
-    fp = float(dec)
-    _, digits, exp = dec.normalize().as_tuple()
+    _, digits, exp = fp.exact_decimal.normalize().as_tuple()
     match exp:
         case str(exp):
             raise ValueError("dec must be a finite number")
@@ -376,18 +415,18 @@ def map_ndigit_decimal_to_fp(dec: Decimal, d: int):
     incr = Decimal(10)**(exp + dec_len - d)
 
     # first d-digit number smaller than the given number
-    lower_d_digit_number = Decimal(f"{str(dec)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
+    lower_d_digit_number = Decimal(f"{str(fp.exact_decimal)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
     # first d-digit number greater than the given number
     upper_d_digit_number = lower_d_digit_number + incr
 
     numbers = []
     # checking d-digit numbers smaller than the given number
-    while float(lower_d_digit_number) == fp:
+    while float(lower_d_digit_number) == fp.fp:
         numbers.append(lower_d_digit_number)
         lower_d_digit_number -= incr
 
     # checking d-digit numbers greater than the given number
-    while float(upper_d_digit_number) == fp:
+    while float(upper_d_digit_number) == fp.fp:
         numbers.append(upper_d_digit_number)
         upper_d_digit_number += incr
 
@@ -416,31 +455,17 @@ def explore_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
     Return True if the segment has the expected precision, False otherwise
     """
     generator = fp_gen(float(start))
-    current_fp: Tuple[Decimal, float, int] = next(generator)
-    num_mapped_decimals = map_ndigit_decimal_to_fp(current_fp[0], d)[0]
-    while num_mapped_decimals < 2 and current_fp[0] < end:
+    current_fp: FP = next(generator)
+    num_mapped_decimals = map_ndigit_decimals_to_fp(current_fp, d)[0]
+    while num_mapped_decimals < 2 and current_fp.exact_decimal < end:
         current_fp = next(generator)
-        num_mapped_decimals = map_ndigit_decimal_to_fp(current_fp[0], d)[0]
+        num_mapped_decimals = map_ndigit_decimals_to_fp(current_fp, d)[0]
 
     if num_mapped_decimals < 2:
         return True
-    
-    print(f"{num_mapped_decimals} {d}-digit decimals mapped to {current_fp[0].normalize()}")
+
+    print(f"{num_mapped_decimals} {d}-digit decimals mapped to {current_fp.exact_decimal.normalize()}")
     return False
-    
-
-# def explore_segment_precision(start: mpf, end: mpf, precision: mpf) -> bool:
-#     current_mpf = start
-#     current_exact_decimal = mpf(float(current_mpf))
-
-#     while current_mpf < end:
-#         previous_exact_decimal = current_exact_decimal
-#         current_mpf = current_mpf + precision
-#         current_exact_decimal = mpf(float(current_mpf))
-#         if previous_exact_decimal == current_exact_decimal:
-#             return False
-#         print(current_mpf / end)
-#     return True
 
 
 if __name__ == "__main__":
@@ -463,7 +488,7 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(map_ndigit_decimal_to_fp(Decimal('72057594037927968'), 17))
+    print(map_ndigit_decimals_to_fp(FP.from_decimal(Decimal('72057594037927968')), 17))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
