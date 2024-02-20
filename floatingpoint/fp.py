@@ -343,7 +343,7 @@ def map_ndigit_decimal_to_fp(dec: Decimal, d: int):
     The list is ordered in ascending order
     """
     fp = float(dec)
-    _, digits, exp = dec.as_tuple()
+    _, digits, exp = dec.normalize().as_tuple()
     match exp:
         case str(exp):
             raise ValueError("dec must be a finite number")
@@ -403,7 +403,7 @@ def explore_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
     if num_mapped_decimals < 2:
         return True
     
-    print(f"more than one num_mapped_decimals for {current_fp[0].normalize()}")
+    print(f"{num_mapped_decimals} {d}-digit decimals mapped to {current_fp[0].normalize()}")
     return False
     
 
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    # print(map_ndigit_decimal_to_fp(Decimal('72057594037927956'), 17))
+    print(map_ndigit_decimal_to_fp(Decimal('72057594037927968'), 17))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
@@ -450,4 +450,4 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-    print(explore_segment(Decimal(72057594037927945), Decimal(72057594037927956), 17))
+    print(explore_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
