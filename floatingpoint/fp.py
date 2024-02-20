@@ -449,10 +449,11 @@ def identify_surrounding_powers_of_2_and_10(x: float) -> List[Tuple[int, int]]:
     return sorted([(2, previous_power_of_2), (10, previous_power_of_10), (2, next_power_of_2), (10, next_power_of_10)], key=lambda x: x[0]**x[1])
 
 
-def explore_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
-    """Explore the precision of the segment [start, end] with the given precision
+def is_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
+    """Determines whether the precision of the segment [start, end] is 'd' digits
 
-    Return True if the segment has the expected precision, False otherwise
+    The precision of the segment is 'd' digits if each d-digit number in the segment maps to
+    a different double-precision floating-point number
     """
     generator = fp_gen(float(start))
     current_fp: FP = next(generator)
@@ -497,4 +498,4 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-    print(explore_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
+    print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
