@@ -1,5 +1,6 @@
 import pytest
 from fp import *
+from sp_fp import *
 
 
 def test_next_binary_value_overflow():  # [missing-function-docstring]
