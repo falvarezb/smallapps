@@ -164,7 +164,7 @@ def fp_gen(fp: FP) -> Generator[FP, None, None]:
     throws an OverflowError.
 
     Args:
-        fp (FP): initial floating-point number
+        fp (FP): initial double-precision floating-point number
 
     Yields:
         FP: double-precision floating-point number

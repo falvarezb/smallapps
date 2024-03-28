@@ -50,34 +50,22 @@ def test_next_binary_fp_result_overflow():
         assert e.args[0] == "Infinity"
 
 
-def test_to_exact_decimal_positive():
-    bits = "0011111111110011001100110011001100110011001100110011001100110011"
-    assert FP.from_binary(bits) == FP(1.2, bits, Decimal(
-        '1.1999999999999999555910790149937383830547332763671875'), 0)
-
-
-def test_to_exact_decimal_negative():
-    bits = "1011111111110011001100110011001100110011001100110011001100110011"
-    assert FP.from_binary(bits) == FP(-1.2, bits, Decimal(
-        '-1.1999999999999999555910790149937383830547332763671875'), 0)
-
-
-def test_to_exact_decimal_nan():
-    try:
-        bits = "1111111111110011001100110011001100110011001100110011001100110011"
-        FP.from_binary(bits)
-        assert False
-    except OverflowError as e:
-        assert e.args[0] == "NaN"
-
-
-def test_to_exact_decimal_infinity():
-    try:
-        bits = "1111111111110000000000000000000000000000000000000000000000000000"
-        FP.from_binary(bits)
-        assert False
-    except OverflowError as e:
-        assert e.args[0] == "Infinity"
+@pytest.mark.parametrize(
+    "bits,expected,expected_message",
+    [
+        ("0011111111110011001100110011001100110011001100110011001100110011", FP(1.2, "0011111111110011001100110011001100110011001100110011001100110011", Decimal('1.1999999999999999555910790149937383830547332763671875'), 0), None),
+        ("1011111111110011001100110011001100110011001100110011001100110011", FP(-1.2, "1011111111110011001100110011001100110011001100110011001100110011", Decimal('-1.1999999999999999555910790149937383830547332763671875'), 0), None),
+        ("1111111111110011001100110011001100110011001100110011001100110011", OverflowError, "NaN"),
+        ("1111111111110000000000000000000000000000000000000000000000000000", OverflowError, "Infinity"),
+    ]
+)
+def test_from_binary(bits, expected, expected_message):
+    if isinstance(expected, type) and issubclass(expected, OverflowError):
+        with pytest.raises(expected, match=expected_message) as exc_info:
+            FP.from_binary(bits)
+        assert exc_info.value.args[0] == expected_message
+    else:
+        assert FP.from_binary(bits) == expected
 
 
 def test_fp_gen():
