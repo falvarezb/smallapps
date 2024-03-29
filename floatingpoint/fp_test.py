@@ -69,7 +69,7 @@ def test_from_binary(bits, expected, expected_message):
 
 
 def test_fp_gen():
-    fp_generator = fp_gen(FP.from_float(0.00000000000012343))
+    fp_generator = FP.from_float(0.00000000000012343).fp_gen()
     assert next(fp_generator) == \
         FP(0.00000000000012343, "0011110101000001010111110000100011001111011111011000010001010000", Decimal('0.0000000000001234300000000000102340991445314016317948146994609714965918101370334625244140625'), -43)
     assert next(fp_generator) == \
@@ -77,7 +77,7 @@ def test_fp_gen():
 
 
 def test_fp_gen_infinity():
-    fp_generator = fp_gen(FP.from_float(1.7976931348623157e+308))
+    fp_generator = FP.from_float(1.7976931348623157e+308).fp_gen()
     assert next(fp_generator) == FP(1.7976931348623157e+308, "0111111111101111111111111111111111111111111111111111111111111111", Decimal('179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368'), 1023)
     try:
         next(fp_generator)
@@ -151,10 +151,18 @@ ctx = Context(prec=100, rounding=ROUND_HALF_UP)
     "data,expected",
     [
         ((9, ctx), Segment(9, Decimal('512'), Decimal('1023.9999999999998863131622783839702606201171875'), Decimal('1.136868377216160297393798828125E-13'))),
-        ((52, ctx), Segment(52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1'))),
+        ((52, ctx), Segment(52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1'))),        
+    ]
+)
+def test_segment_from_exponent(data, expected):
+    assert Segment.from_exponent(*data) == expected
+
+@pytest.mark.parametrize(
+    "data,expected",
+    [        
         ((1023.0, ctx), Segment(9, Decimal('512'), Decimal('1023.9999999999998863131622783839702606201171875'), Decimal('1.136868377216160297393798828125E-13'))),
         ((4503599627370497.0, ctx), Segment(52, Decimal('4503599627370496'), Decimal('9007199254740991'), Decimal('1')))
     ]
 )
-def test_segment_params(data, expected):
-    assert segment_params(*data) == expected
+def test_segment_from_fp(data, expected):
+    assert Segment.from_fp(*data) == expected
