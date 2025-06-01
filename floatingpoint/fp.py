@@ -3,7 +3,6 @@
 
 from decimal import ROUND_HALF_UP, Decimal, setcontext, Context
 from math import log2, log10, floor
-from functools import singledispatch
 from typing import List, Tuple, Generator
 from fputil import unpack_double_precision_fp, check_infinity_or_nan, from_decimal_to_binary, next_binary_fp
 
@@ -100,8 +99,7 @@ class FP:
     def from_decimal(dec: Decimal) -> "FP":
         """Return a FP object from the given Decimal number
         """
-        bits = from_decimal_to_binary(float(dec))[0]
-        return FP.from_binary(bits)
+        return FP.from_float(float(dec))
 
     @staticmethod
     def from_float(f: float) -> "FP":
@@ -263,7 +261,7 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(FP.from_decimal(Decimal('72057594037927968')).get_d_digit_decimals(17))
+    print(FP.from_decimal(Decimal('72057594037927968')).get_d_digit_decimals(16))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
@@ -272,4 +270,4 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-    print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 16))
+    print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
