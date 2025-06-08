@@ -96,6 +96,37 @@ class FP:
         return (len(numbers), distance, sorted(numbers))
 
     @staticmethod
+    def get_number_significant_digits(decimal: str) -> int:
+        """Return the number of significant digits of a decimal number.
+        
+        Precision of an individual decimal number defined as the minimum amount of digits to identify its floating-point number.
+
+        Recursive implementation: on each iteration, the number of digits is reduced by one until the resulting decimal number
+        points to a different floating-point number.
+        """
+
+        fp = FP.from_decimal(Decimal(decimal)).fp
+
+        def truncate(aux_decimal: Decimal, d: int) -> int:
+            _, digits, exp = aux_decimal.normalize().as_tuple()
+            match exp:
+                case str(exp):
+                    raise ValueError("dec must be a finite number")
+                case _:
+                    exp = int(exp)
+
+            dec_len = len(digits)
+
+            # first d-digit number smaller than the given number
+            lower_d_digit_number = Decimal(f"{str(aux_decimal)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
+            if float(lower_d_digit_number) == fp:
+                return truncate(lower_d_digit_number, d - 1)
+            return d + 1
+
+        return truncate(Decimal(decimal), len(decimal))
+
+
+    @staticmethod
     def from_decimal(dec: Decimal) -> "FP":
         """Return a FP object from the given Decimal number
         """
@@ -261,8 +292,10 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(FP.from_float(72057594037927956))
-    print(FP.from_float(72057594037927956).get_d_digit_decimals(18))
+    # print(FP.from_float(0.46123456789012346))
+    # print(FP.from_float(0.46123456789012346).get_d_digit_decimals(18))
+    # print(FP.from_decimal(Decimal(0.10000000000000002)).get_d_digit_decimals(19))
+    print(FP.get_number_significant_digits("0.1000000000000000195"))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
@@ -271,8 +304,5 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-    # print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
+    # print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 16))
     # print(Segment.from_fp(1.0, Context(prec=400, rounding=ROUND_HALF_UP)))
-
-
-
