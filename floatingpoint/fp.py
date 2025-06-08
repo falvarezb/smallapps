@@ -75,7 +75,7 @@ class FP:
 
         dec_len = len(digits)
         # distance between consecutive d-digit numbers
-        distance = Decimal(10)**(exp + dec_len - d)
+        distance = Decimal(10)**(exp + dec_len - (d if exp >= 0 else d-1))
 
         # first d-digit number smaller than the given number
         lower_d_digit_number = Decimal(f"{str(self.exact_decimal)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
@@ -261,7 +261,8 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    print(FP.from_decimal(Decimal('72057594037927968')).get_d_digit_decimals(16))
+    print(FP.from_float(72057594037927956))
+    print(FP.from_float(72057594037927956).get_d_digit_decimals(18))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
@@ -270,4 +271,8 @@ if __name__ == "__main__":
     # print(binary_val)
     # print(exact_decimal)
     # tabulate_esegments(50,59)
-    print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
+    # print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 15))
+    # print(Segment.from_fp(1.0, Context(prec=400, rounding=ROUND_HALF_UP)))
+
+
+
