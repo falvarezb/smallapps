@@ -86,12 +86,12 @@ class FP:
         numbers = []
         # checking d-digit numbers smaller than the given number
         while float(lower_d_digit_number) == self.fp:
-            numbers.append(lower_d_digit_number)
+            numbers.append(lower_d_digit_number.normalize(Context(prec=d)))
             lower_d_digit_number -= distance
 
         # checking d-digit numbers greater than the given number
         while float(upper_d_digit_number) == self.fp:
-            numbers.append(upper_d_digit_number)
+            numbers.append(upper_d_digit_number.normalize(Context(prec=d)))
             upper_d_digit_number += distance
 
         return (len(numbers), distance, sorted(numbers))
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
     # print(FP.from_float(1023.99999999999988))
-    print(FP.from_float(0.1).get_d_digit_decimals(18))
+    print(FP.from_float(0.1).get_d_digit_decimals(19))
     # print(FP.from_decimal(Decimal(0.1)).get_d_digit_decimals(18))
     # print(FP.get_number_significant_digits("1023.999999999999887"))
 
