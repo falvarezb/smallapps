@@ -75,7 +75,8 @@ class FP:
 
         dec_len = len(digits)
         # distance between consecutive d-digit numbers
-        distance = Decimal(10)**(exp + dec_len - (d if exp >= 0 else d-1))
+        # when dec_len == -exp, the leading 0 is dropped, so we need to adjust the distance accordingly
+        distance = Decimal(10)**(exp + dec_len - (d-1 if exp + dec_len == 0 else d))
 
         # first d-digit number smaller than the given number
         lower_d_digit_number = Decimal(f"{str(self.exact_decimal)[:(d if exp >= 0 else d+1)]}{'0' * (dec_len - d)}")
@@ -271,6 +272,9 @@ def is_segment_precision(start: Decimal, end: Decimal, d: int) -> bool:
     print(f"{num_mapped_decimals} {d}-digit decimals mapped to {current_fp.exact_decimal.normalize()}")
     return False
 
+def print_decimal(fp: FP) -> None:
+    _, digits, exp = fp.exact_decimal.normalize().as_tuple()
+    print(f"Decimal: {fp.exact_decimal}, digits: {digits}, exp: {exp}, len(digits): {len(digits)}")
 
 if __name__ == "__main__":
     # print(mpf(7.1))
@@ -292,10 +296,10 @@ if __name__ == "__main__":
     # print(get_n_fp(72057594037927956, 3))
     # print(normalise_to_significant_digits(72057594037927956, 16))
     # print(normalise_to_significant_digits(0.0454, 1))
-    # print(FP.from_float(0.46123456789012346))
-    # print(FP.from_float(0.46123456789012346).get_d_digit_decimals(18))
-    # print(FP.from_decimal(Decimal(0.10000000000000002)).get_d_digit_decimals(19))
-    print(FP.get_number_significant_digits("0.1000000000000000195"))
+    # print(FP.from_float(1023.99999999999988))
+    print(FP.from_float(0.1).get_d_digit_decimals(18))
+    # print(FP.from_decimal(Decimal(0.1)).get_d_digit_decimals(18))
+    # print(FP.get_number_significant_digits("1023.999999999999887"))
 
     # decimal = 72057594037927945
     # binary_val = to_double_precision_floating_point_binary(decimal)[0]
@@ -306,3 +310,8 @@ if __name__ == "__main__":
     # tabulate_esegments(50,59)
     # print(is_segment_precision(Decimal(72057594037927945), Decimal(72057594037928000), 16))
     # print(Segment.from_fp(1.0, Context(prec=400, rounding=ROUND_HALF_UP)))
+
+    # print_decimal(FP.from_float(0.1))
+    # print_decimal(FP.from_float(1.1))
+    # print_decimal(FP.from_float(1023.9999999999999))
+    # print_decimal(FP.from_float(72057594037927945))
