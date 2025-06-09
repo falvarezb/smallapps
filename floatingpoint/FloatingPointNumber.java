@@ -5,29 +5,37 @@ import static java.lang.Math.*;
 
 public class FloatingPointNumber {
 
-    static int EXPONENT_BIAS = 127;
-    static BigDecimal binaryToFloat(String binary) {
-        double d = 0.123456789123456789123456789123456789123456789;
-        System.out.println(d);
+    static int SINGLE_FP_EXPONENT_BIAS = 127;
+    static BigDecimal exactDecimal(String singleFloatingPointBinary) {        
         BigDecimal mantissa = BigDecimal.ONE;
         BigDecimal half = new BigDecimal("0.5");
-        String fraction = binary.substring(9);
+        String fraction = singleFloatingPointBinary.substring(9);
         for (int i = 0; i < fraction.length(); i++) {
             BigDecimal decimalValue = BigDecimal.valueOf(Long.parseLong(fraction.substring(i,i+1))).multiply(half.pow(i+1));
             mantissa = mantissa.add(decimalValue);
         }
-        int exponent = Integer.valueOf(binary.substring(1,9),2) - EXPONENT_BIAS;
+        int exponent = Integer.valueOf(singleFloatingPointBinary.substring(1,9),2) - SINGLE_FP_EXPONENT_BIAS;
         int sign = fraction.charAt(0) == '0' ? 1 : -1;
         BigDecimal result = mantissa.multiply(BigDecimal.valueOf(2).pow(exponent, new MathContext(50, RoundingMode.HALF_EVEN)));
         return result.multiply(BigDecimal.valueOf(sign));
     }
 
-    static double pi(int numSteps) {
-        double stepSize = 1.0/numSteps;
-        double sum = 0;
+    static float float_pi(int numSteps) {
+        float stepSize = 1.0f/numSteps;
+        float sum = 0f;
+        for (int i=0; i<numSteps; i++) {
+            float x = (i+0.5f)*stepSize;
+            sum += (4.0f/(1.0f+pow(x,2)));
+        }
+        return sum*stepSize;
+    }
+    
+    static double double_pi(int numSteps) {
+        double stepSize = 1.0d/numSteps;
+        double sum = 0d;
         for (int i=0; i<numSteps; i++) {
             double x = (i+0.5d)*stepSize;
-            sum += (4.0/(1.0+pow(x,2)));
+            sum += (4.0d/(1.0d+pow(x,2)));
         }
         return sum*stepSize;
     }
@@ -45,23 +53,19 @@ public class FloatingPointNumber {
         return sum.multiply(stepSize);
     }
     public static void main(String[] args) {
-        //System.out.println(binaryToFloat("00111110101010101010101010101011"));
-        //System.out.println(BigDecimal.valueOf(4).divide(BigDecimal.valueOf(3), new MathContext(50, RoundingMode.HALF_EVEN)));
-        //System.out.println(pi((int)1e9));
-        System.out.println(arbitrary_precision_pi((int)1e9, 24));
+        //System.out.println(exactDecimal("00111110101010101010101010101011"));        
+        int numSteps = (int)1e9;
+        int precision = 24;
+        System.out.println("Calculating pi with " + numSteps + " steps and precision " + precision + " digits:");
+        var t0 = System.currentTimeMillis();
+        System.out.println(float_pi(numSteps));
+        System.out.println("" + (System.currentTimeMillis() - t0) / 1000.0 + " seconds");
+        t0 = System.currentTimeMillis();
+        System.out.println(double_pi(numSteps));
+        System.out.println("" + (System.currentTimeMillis() - t0) / 1000.0 + " seconds");
+        t0 = System.currentTimeMillis();
+        System.out.println(arbitrary_precision_pi(numSteps, precision));
+        System.out.println("" + (System.currentTimeMillis() - t0) / 1000.0 + " seconds");
     }
 }
-//1e7 - 3.956
-//3.14159265358979
-//3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280
 
-
-//1e8 - 57.152
-//3.1415926535897932
-//3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280
-
-//1e8 - 57.152
-//3.1415926535897932
-//3.1415926535897932  (p=18)
-//3.1415926535897932 (24)
-//3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280

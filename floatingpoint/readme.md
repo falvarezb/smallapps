@@ -33,70 +33,60 @@ Then:
 - $x_{k+1} - x = (x + 2^{k-1}) - x = 2^{k-1}$
 - $x_k - x_{k+1} = (x + 2^k) - (x + 2^{k-1}) = 2^k (1 - 2^{-1}) = 2^k 2^{-1} = 2^{k-1}$
 
-provingthat $x_{k+1}$ lies in the middle between $x$ and $x_k$
+proving that $x_{k+1}$ lies in the middle between $x$ and $x_k$
 
 If the binary representation of a floating-point number has a group of digits that repeats indefinitely, it's not feasible to examine all digits to determine whether all of them are 0 or not. Instead, when calculating the binary representation, we can check if the fraction left after calculating the _(k+1)-th_ digit is 0 or not.
 
 
 
-### BigDecimal
-
-scala> val b = BigDecimal.exact(7.4)                                            isDecimalDouble isBinaryDouble  isExactDouble
-b: scala.math.BigDecimal = 7.4000000000000003552713678800500929355621337890625  false           true            true
-
-scala> val b = BigDecimal.decimal(7.4)                                          
-b: scala.math.BigDecimal = 7.4                                                  true            false           false
-
-scala> val b = BigDecimal.binary(7.4)
-b: scala.math.BigDecimal = 7.400000000000000355271367880050093                  false           true            false  
-
-scala> val b = BigDecimal.decimal(7)
-b: scala.math.BigDecimal = 7                                                    true            true            true
-
-scala> val b = BigDecimal(1)/BigDecimal(3)
-b: scala.math.BigDecimal = 0.3333333333333333333333333333333333                 false           false           false
-
-### References
-
-[Floating-point assembly](https://staffwww.fullcoll.edu/aclifton/cs241/lecture-floating-point-simd.html)
-
-### Online converters
+## Online converters
 - [baseconvert](https://baseconvert.com/ieee-754-floating-point)
 - [exploringbinary](https://www.exploringbinary.com/floating-point-converter/)
 
 
-https://docs.python.org/3/library/string.html#formatspec
+
+## Benchmark
+
+This benchmark compares the performance of different floating-point representations (single float, double float, and BigDecimal) in calculating the value of π (Pi) using a numerical integration method.
+
+Actual [Pi value](https://www.piday.org/million/) used for comparison:
+
+Pi = 3.141592653589793238462643383279502884197169399375105820974
 
 
-### Definition of precision
+| Single float | 1e7 | 1e8 | 1e9 |
+|----------|----------|----------|----------|
+|   Value      |    3.099413     |    0.67108864     |    0.06710886     |
+|   Time (s)      |    0.059     |   0.623     |    5.531    |
 
-- exact decimal
-1023.9999999999998863131622783839702606201171875
+| Double float | 1e7 | 1e8 | 1e9 |
+|----------|----------|----------|----------|
+|   Value      |    3.141592653589731     |    3.1415926535904264     |    3.1415926535899708    |
+|   Time (s)      |    0.055     |   0.591    |    5.169    |
 
-- subset of exact decimal
-1023.999999999999886 (same fp and first 'n' digits are the same, but what
-happens if it does not round-trip?)
-i.e. 0.1000000000000000054 is subset but does not round-trips
+| BigDecimal (prec=32) | 1e7 | 1e8 | 1e9 |
+|----------|----------|----------|----------|
+|   Value      |    3.141592653589794071795976717045     |    3.1415926535897932467959767163538     |    3.14159265358979323854597671658459    |
+|   Time (s)      |    2.916     |   27.218    |    377.414    |
 
-Java/Python both behave like the 'non-subset'
-1023.999999999999886 -> 1023.9999999999999
-0.1000000000000000054 -> 0.1
 
-- non-subset of exact decimal
-1023.999999999999887 (find shortest decimal repr of fp that round-trips)
+## Annex
 
-1023.999999999999 887 -> 1023.999999999999 9
-so 887 is replaced by 9, so none of the original digits was valid
+The algorithm used to calculate Pi is a numerical integration technique called the midpoint rectangle method.
 
-According to DEFINITION OF PRECISION, we have 17-digit precision
+The value of π can be represented as a definite integral:
 
-however, only the 16 first digits -1023.999999999999- stay in the final solution
+$$ 
+\pi = \int_0^1 \frac{4}{1 + x^2} dx 
+$$
 
-alg: 
-- given a d-digit decimal representation, calculate fp
-- remove least significant digit and find a (d-1)-digit representative of fp that round-trips
-- if found, continue recursively by repeating the previous step until no more representatives found
-- select shortest found representative
 
-is it possible to end up with more than one candidate to choose from?
+### Algorithm Details
+
+The algorithm divides the interval [0, 1] into numSteps equal-width subintervals (rectangles). For each subinterval:
+
+- Calculate the midpoint: $ x_i = (i + 0.5) \times \text{stepSize} $
+- Evaluate the function: $ f(x_i) = \frac{4}{1 + x_i^2} $
+- Sum the areas: Each rectangle's area is $ f(x_i) \times \text{stepSize} $
+- Total sum: The sum of all rectangle areas approximates the integral, and thus π.
 
